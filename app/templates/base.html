@@ -1,1 +1,292 @@
-Hello World
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="104 履歷診療室 - 專業職涯諮詢服務，提供履歷健診、模擬面試、職涯諮詢等服務">
+    <meta name="keywords" content="履歷健診,模擬面試,職涯諮詢,104,履歷診療室">
+
+    <!-- 性能優化：DNS 預解析 -->
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    
+    <!-- 性能優化：關鍵資源預載入 -->
+    <link rel="preload" href="/static/css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/static/js/script.js" as="script" onload="this.onload=null;this.rel='script'">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" as="style" crossorigin>
+    
+    <!-- 性能優化：字體預載入 -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" crossorigin>
+    
+    <!-- 性能優化：關鍵圖片預載入 -->
+    <link rel="preload" href="/static/images/icons/logo-header.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="/static/images/icons/chat-avatar.svg" as="image" type="image/svg+xml">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <title>{% block title %}104 履歷診療室-諮詢時間預約{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- 自定義樣式 -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="/static/images/icons/favicon.png" type="image/x-icon" />
+    
+    <!-- 性能優化：內聯關鍵 CSS -->
+    <style>
+        /* 關鍵渲染路徑 CSS */
+        .giverCard { opacity: 0; animation: fadeIn 0.3s ease-in forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        /* 防止內容閃爍 */
+        .modal { display: none; }
+        .modal.show { display: block; }
+        
+        /* 優化按鈕響應 */
+        .btn { transition: all 0.15s ease; }
+        .btn:active { transform: scale(0.98); }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- 導覽列 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light position-relative" role="navigation" aria-label="主要導覽">
+        <div class="container-fluid justify-content-center position-relative">
+            <button class="navbar-toggler position-absolute start-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="切換導覽選單">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <a class="navbar-brand mx-auto" href="#" aria-label="回到首頁">
+                <img src="/static/images/icons/logo-header.svg" alt="104 履歷診療室">
+                <span class="visually-hidden">104 履歷診療室</span>
+            </a>
+
+            <div class="position-absolute end-0 me-3 d-flex align-items-center">
+                <a href="#" class="btn btn-sm" aria-label="登入或註冊帳號">登入/註冊</a>
+            </div>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="前往人力銀行">人力銀行</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="前往 My104">My104</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="找工作">找工作</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="求職秘笈">求職秘笈</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="職涯服務">職涯服務</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="職場測驗">職場測驗</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="學習資源">學習資源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" aria-label="所有服務">所有服務</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid mt-5 mr-5 ml-5" role="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 聊天對話框 -->
+    <div class="modal fade" id="giver-modal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true"
+        role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chatModalLabel">邀請 Giver - Giver Name 協助諮詢</h5>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- 聊天訊息區域 -->
+                    <div id="chat-messages" class="chat-messages p-3" role="log" aria-live="polite">
+                        <!-- 新增諮詢時間區域 -->
+                        <div class="message giver-message">
+                            <div class="d-flex align-items-center mb-2">
+                                <img id="chat-giver-avatar-small" src="/static/images/icons/chat-avatar.svg" alt="Giver 頭像"
+                                    class="chat-avatar-modal">
+                            </div>
+                            <div class="message-content">
+                                <p class="message-title">如想與 Giver 進行諮詢，例如線上模擬面試、即時文字訊息往返，請點此預約 Giver 時間。</p>
+                                <!-- 直接顯示的選項按鈕 -->
+                                <div class="chat-options-buttons" role="group" aria-label="諮詢選項">
+                                    <button class="btn btn-outline btn-option" data-option="schedule"
+                                        aria-label="預約 Giver 時間">
+                                        我想預約 Giver 時間
+                                    </button>
+                                    <button class="btn btn-outline btn-option" data-option="skip" aria-label="暫不預約">
+                                        暫不預約 Giver 時間
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 提供單筆方便時段表單 -->
+                        <div id="schedule-form" class="message user-message">
+                            <div class="message-content">
+                                <p class="message-title">請提供您方便的時段：</p>
+                                <form id="time-schedule-form" class="schedule-form" aria-label="預約時間表單">
+                                    <div class="form-group mb-3">
+                                        <label for="schedule-date" class="form-label">日期 <span class="text-danger"
+                                                aria-label="必填欄位">*</span></label>
+                                        <input type="text" id="schedule-date" class="form-control" placeholder="請選擇日期"
+                                            readonly required aria-describedby="date-help">
+                                        <div id="date-help" class="form-text visually-hidden">請點擊此欄位選擇日期</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="schedule-start-time" class="form-label">開始時間<span
+                                                        class="text-danger" aria-label="必填欄位">*</span></label>
+                                                <input type="text" id="schedule-start-time" class="form-control"
+                                                    placeholder="請輸入 4 位數字，例：2000" required aria-describedby="start-time-help">
+                                                <div id="start-time-help" class="form-text">請輸入 24 小時制時間格式，例如：20:00
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="schedule-end-time" class="form-label">結束時間<span
+                                                        class="text-danger" aria-label="必填欄位">*</span></label>
+                                                <input type="text" id="schedule-end-time" class="form-control"
+                                                    placeholder="請輸入 4 位數字，例：2200" required aria-describedby="end-time-help">
+                                                <div id="end-time-help" class="form-text">請輸入 24 小時制時間格式，例如：22:00</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="schedule-notes" class="form-label">備註</label>
+                                        <textarea id="schedule-notes" class="form-control" placeholder="請輸入備註（非必填）"
+                                            aria-describedby="notes-help"></textarea>
+                                        <div id="notes-help" class="form-text">可選填，請描述您希望諮詢的內容或特殊需求</div>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-orange" aria-label="提交預約表單">輸入完成</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 輸入訊息區域 -->
+                    <div class="chat-input p-3 border-top">
+                        <div class="input-group">
+                            <input type="text" id="chat-input-message" class="form-control" placeholder="請點擊選項按鈕"
+                                aria-label="輸入訊息">
+                            <button class="btn-topic btn-gray" type="button" id="chat-send-btn" aria-label="發送訊息">
+                                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <!-- 新增功能按鈕區塊 -->
+                        <div class="chat-extra-buttons d-flex flex-wrap justify-content-start">
+                            <button class="btn btn-orange mx-1 my-2" data-option="view-giver-times">查看 Giver 方便的時間</button>
+                            <button class="btn btn-orange mx-1 my-2" data-option="view-my-booked-times">查看我已預約 Giver 的時間</button>
+                            <button class="btn btn-orange mx-1 my-2" data-option="provide-single-time">提供單筆方便時段</button>
+                            <button class="btn btn-orange mx-1 my-2" data-option="provide-multiple-times">提供多筆方便時段</button>
+                            <button class="btn btn-orange mx-1 my-2" data-option="view-my-times">查看我已提供時段的狀態</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div class="modal fade" id="confirm-modal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true"
+        role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉對話框"></button>
+                </div>
+                <div class="modal-body text-center px-4">
+                    <h5 class="modal-title mb-3" id="confirmModalLabel">差幾步就能完成申請囉！</h5>
+                    <p class="text-muted mb-4">Giver 提供的名額即將額滿，現在離開下次需要重新申請哦！要繼續完成嗎？</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <div class="d-flex justify-content-between w-100">
+                        <button type="button" class="btn btn-outline-secondary" id="leave-btn" aria-label="離開申請流程">
+                            忍痛離開
+                        </button>
+                        <button type="button" class="btn btn-orange" id="continue-btn" aria-label="繼續完成申請">
+                            繼續完成
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日期選擇器 Modal -->
+    <div class="modal fade" id="date-picker-modal" tabindex="-1" aria-labelledby="datePickerModalLabel"
+        aria-hidden="true" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="datePickerModalLabel">選擇日期</h5>
+                    <button type="button" class="btn-close" id="date-picker-close-btn" aria-label="關閉日期選擇器"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="date-picker-container">
+                        <div class="date-picker-header">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="prev-month"
+                                aria-label="上個月">
+                                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                            </button>
+                            <span id="current-month-year" class="fw-bold" aria-live="polite"></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="next-month"
+                                aria-label="下個月">
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="date-picker-weekdays" role="rowgroup" aria-label="星期標題">
+                            <div class="weekday" role="columnheader">一</div>
+                            <div class="weekday" role="columnheader">二</div>
+                            <div class="weekday" role="columnheader">三</div>
+                            <div class="weekday" role="columnheader">四</div>
+                            <div class="weekday" role="columnheader">五</div>
+                            <div class="weekday" role="columnheader">六</div>
+                            <div class="weekday" role="columnheader">日</div>
+                        </div>
+                        <div id="date-picker-calendar" class="date-picker-calendar" role="grid" aria-label="日期選擇">
+                            <!-- 日期格子將由 JavaScript 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入順序優化：先載入外部依賴 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+
+    <!-- 載入自定義腳本 --> 
+    <script src="/static/js/script.js" defer></script>
+    
+    <!-- 性能優化：延遲載入非關鍵資源 -->
+    <script>
+        // 設定 JavaScript 開始時間標記
+        window.performance.mark('js-start');
+        
+        // 延遲載入非關鍵功能
+        window.addEventListener('load', () => {
+            window.performance.mark('js-end');
+            window.performance.measure('js-load-time', 'js-start', 'js-end');
+            
+            const measure = window.performance.getEntriesByName('js-load-time')[0];
+            if (measure) {
+                console.log(`JavaScript 載入時間: ${measure.duration.toFixed(2)}ms`);
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

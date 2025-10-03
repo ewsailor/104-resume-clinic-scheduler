@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Giver 列表 - 104 履歷診療室{% endblock %}
+
+{% block content %}
+<!-- Giver 列表 -->
+<section class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="giver-panel" aria-label="諮詢師列表">
+    {% for giver in givers %}
+    <div class="col-sm-3">
+        <article class="mb-4">
+            <button class="giverCard giverCard__pointer" data-id="{{ giver.id }}" type="button"
+                aria-label="選擇{{ giver.name }}進行諮詢">
+                <div class="giverCard__avatar">
+                    <div class="giverCard__avatar-container">
+                        <img src="{{ giver.image }}" alt="{{ giver.name }}的頭像" class="giverCard__avatar-img">
+                    </div>
+
+                    <div class="giverCard__user-info">
+                        <div class="giverCard__name">
+                            <span>{{ giver.name }}</span>
+                            <i class="fa-solid fa-chevron-right giverCard__icon-gray" aria-hidden="true"></i>
+                        </div>
+                        <div class="giverCard__title">{{ giver.title }}</div>
+                        <div class="giverCard__company">{{ giver.company }}</div>
+                    </div>
+                </div>
+
+                <div class="giverCard__count">
+                    <div class="giverCard__count-item">
+                        <span class="giverCard__count-value">{{ giver.consulted }} 人</span>
+                        <p class="giverCard__count-label">已諮詢</p>
+                    </div>
+                    <div class="giverCard__divider" aria-hidden="true"></div>
+                    <div class="giverCard__count-item">
+                        <span class="giverCard__count-value">{{ giver.average_responding_time }} 天</span>
+                        <p class="giverCard__count-label">平均回覆時間</p>
+                    </div>
+                    <div class="giverCard__divider" aria-hidden="true"></div>
+                    <div class="giverCard__count-item">
+                        <span class="giverCard__count-value">{{ giver.experience }} 年</span>
+                        <p class="giverCard__count-label">工作經驗</p>
+                    </div>
+                </div>
+
+                <div class="giverCard__topic">
+                    {% for topic in giver.giverCard__topic %}
+                    <span class="btn-topic-sm" data-topic="{{ topic }}">{{ topic }}</span>
+                    {% endfor %}
+                    <i class="fa-solid fa-chevron-right giverCard__icon-gray" aria-hidden="true"></i>
+                </div>
+
+                <div class="giverCard__action">
+                    <button data-gtm-check="Giver列表_我要諮詢" class="btn btn-orange giverCard__action-button"
+                        data-id="{{ giver.id }}" aria-label="我要諮詢{{ giver.name }}">
+                        我要諮詢
+                    </button>
+                </div>
+            </button>
+        </article>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- 分頁器 -->
+<nav aria-label="分頁導覽">
+    <ul class="pagination paginator-container" id="paginator" role="navigation">
+        <li class="pagination__item pagination__item--disabled">
+            <a class="pagination__link pagination__link--prev" href="#" data-page="prev" aria-label="前往上一頁"
+                aria-disabled="true">上一頁</a>
+        </li>
+        <li class="pagination__item pagination__item--active">
+            <a class="pagination__link pagination__link--page" data-page="1" href="#" aria-label="第 1 頁"
+                aria-current="page">1</a>
+        </li>
+        <li class="pagination__item">
+            <a class="pagination__link pagination__link--page" data-page="2" href="#" aria-label="第 2 頁">2</a>
+        </li>
+        <li class="pagination__item">
+            <a class="pagination__link pagination__link--next" href="#" data-page="next" aria-label="前往下一頁">下一頁</a>
+        </li>
+    </ul>
+</nav>
+{% endblock %}

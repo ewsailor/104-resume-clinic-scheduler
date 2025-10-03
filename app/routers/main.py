@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 # ===== 本地模組 =====
-# from app.core.giver_data import MOCK_GIVERS
+from app.core.giver_data import MOCK_GIVERS
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ async def show_index(request: Request) -> HTMLResponse:
     """
     templates: Jinja2Templates = request.app.state.templates
     result = templates.TemplateResponse(
-        request, "base.html", {"givers": []}
+        request, "giver_list.html", {"givers": MOCK_GIVERS}
     )
 
     return result
