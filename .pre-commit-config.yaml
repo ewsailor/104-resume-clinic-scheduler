@@ -1,0 +1,56 @@
+repos:
+  - repo: local
+    hooks:
+      - id: fix-function-imports
+        name: Fix function imports
+        entry: python scripts/fix_imports.py
+        language: system
+        types: [python]
+        pass_filenames: true
+
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args:
+          [
+            "--remove-all-unused-imports",
+            "--remove-unused-variables",
+            "--in-place",
+          ]
+        language_version: python3
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args:
+          [
+            "--settings-path=pyproject.toml",
+            "--remove-redundant-aliases",
+            "--force-sort-within-sections",
+          ]
+        language_version: python3
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        args: ["--config=pyproject.toml"]
+        language_version: python3
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        args: ["--config=.flake8"]
+        language_version: python3
+        # additional_dependencies: [flake8-docstrings]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.16.0
+    hooks:
+      - id: mypy
+        args: ["--config-file=pyproject.toml"]
+        files: ^app/.*\.py$
+        language_version: python3

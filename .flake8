@@ -1,0 +1,28 @@
+[flake8]
+# 設定最大行長度為 88 字元（符合 Black 格式化工具標準）
+max-line-length = 88
+
+# 忽略特定的 Flake8 錯誤代碼
+# 空白相關錯誤：E203(冒號前後不應有空格), W503(二元運算符前換行)
+# Docstring 相關錯誤：D107(缺少 docstring), D203(類別定義後應有一個空行), D213(多行 docstring 摘要應在第二行)
+# 缺少文檔部分：D406(缺少 "Returns" 部分), D407(缺少 "Raises" 部分), D413(缺少 "Returns" 或 "Yields" 部分-函數有 return 語句), D415(缺少 "Returns" 或 "Yields" 部分-函數有 yield 語句)
+# 其他忽略的錯誤：E501(行太長), F401(導入但未使用的模組), E402(模組級導入不在檔案頂部), F541(f-string 中沒有占位符), F841(區域變數被賦值但從未使用)
+extend-ignore =
+    E203, W503,
+    D107, D203, D213, D406, D407, D413, D415,
+    E501, F401, E402, F541, F841
+
+# 設定 docstring 風格為 Google 風格
+docstring-convention = google
+
+# 排除檢查的目錄和檔案
+exclude =
+    .git,           # Git 版本控制目錄
+    __pycache__,    # Python 快取目錄
+    .mypy_cache,    # MyPy 快取目錄
+    .pytest_cache,  # Pytest 快取目錄
+    .venv,          # 虛擬環境目錄
+    alembic,        # 資料庫遷移工具目錄
+    scripts,        # 腳本目錄
+    tests,          # 測試目錄
+    *.pyc           # Python 編譯檔案
