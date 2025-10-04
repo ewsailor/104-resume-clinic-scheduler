@@ -10,8 +10,8 @@ from fastapi.templating import Jinja2Templates
 
 # ===== 本地模組 =====
 from app.core.settings import Settings
-# from app.database import initialize_database
-# from app.decorators import handle_generic_errors_sync
+from app.decorators import handle_generic_errors_sync
+
 # from app.middleware.cors import log_app_startup, setup_cors_middleware
 
 
@@ -25,7 +25,7 @@ def create_templates(settings: Settings) -> Jinja2Templates:
     return Jinja2Templates(directory=str(settings.templates_dir))
 
 
-# @handle_generic_errors_sync("建立 FastAPI 應用程式")
+@handle_generic_errors_sync("建立 FastAPI 應用程式")
 def create_app(settings: Settings) -> FastAPI:
     """建立並配置 FastAPI 應用程式。"""
     # 根據環境決定是否顯示 API 文件
@@ -80,9 +80,6 @@ def create_app(settings: Settings) -> FastAPI:
 
     # CORS 中間件設定
     # setup_cors_middleware(app)
-
-    # 資料庫初始化
-    # initialize_database()
 
     # 掛載靜態檔案服務
     app.mount(
