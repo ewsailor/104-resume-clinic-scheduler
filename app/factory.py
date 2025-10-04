@@ -1,6 +1,6 @@
 """應用程式工廠模組。
 
-負責建立和配置 FastAPI 應用程式的各個組件，包括靜態檔案服務、模板引擎等。
+負責建立和配置 FastAPI 應用程式的核心組件，包括應用程式實例、靜態檔案服務、模板引擎等。
 """
 
 # ===== 第三方套件 =====
@@ -11,18 +11,6 @@ from fastapi.templating import Jinja2Templates
 # ===== 本地模組 =====
 from app.core.settings import Settings
 from app.decorators import handle_generic_errors_sync
-
-# from app.middleware.cors import log_app_startup, setup_cors_middleware
-
-
-def create_static_files(settings: Settings) -> StaticFiles:
-    """建立並配置靜態檔案服務。"""
-    return StaticFiles(directory=str(settings.static_dir))
-
-
-def create_templates(settings: Settings) -> Jinja2Templates:
-    """建立並配置 Jinja2 模板引擎。"""
-    return Jinja2Templates(directory=str(settings.templates_dir))
 
 
 @handle_generic_errors_sync("建立 FastAPI 應用程式")
@@ -55,7 +43,7 @@ def create_app(settings: Settings) -> FastAPI:
         # })
         pass
 
-    # 建立 FastAPI 應用程式
+    # 建立 FastAPI 應用程式實例
     app = FastAPI(
         title=settings.app_name,
         description=settings.app_description,
@@ -75,15 +63,14 @@ def create_app(settings: Settings) -> FastAPI:
         },
     )
 
-    # 記錄應用程式啟動資訊
-    # log_app_startup(app)
-
-    # CORS 中間件設定
-    # setup_cors_middleware(app)
-
-    # 掛載靜態檔案服務
-    app.mount(
-        settings.static_url, create_static_files(settings), name=settings.static_name
-    )
-
     return app
+
+
+def create_templates(settings: Settings) -> Jinja2Templates:
+    """建立並配置 Jinja2 模板引擎。"""
+    return Jinja2Templates(directory=str(settings.templates_dir))
+
+
+def create_static_files(settings: Settings) -> StaticFiles:
+    """建立並配置靜態檔案服務。"""
+    return StaticFiles(directory=str(settings.static_dir))

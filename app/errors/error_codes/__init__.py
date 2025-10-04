@@ -11,7 +11,7 @@
 """
 
 # ===== 本地模組 =====
-# from .cors import CORSErrorCode
+from .cors import CORSErrorCode
 from .crud import CRUDErrorCode
 
 # from .router import RouterErrorCode
@@ -23,6 +23,6 @@ __all__ = [
     # "RouterErrorCode",
     # "ServiceErrorCode",
     "CRUDErrorCode",
-    # "CORSErrorCode",
+    "CORSErrorCode",
     "SystemErrorCode",
 ]

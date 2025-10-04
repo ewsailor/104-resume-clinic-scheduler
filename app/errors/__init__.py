@@ -4,7 +4,7 @@
 """
 
 # ===== 本地模組 =====
-# from .error_codes.cors import CORSErrorCode
+from .error_codes.cors import CORSErrorCode
 from .error_codes.crud import CRUDErrorCode
 
 # from .error_codes.router import RouterErrorCode
@@ -26,7 +26,7 @@ __all__ = [
     # "RouterErrorCode",
     # "ServiceErrorCode",
     "CRUDErrorCode",
-    # "CORSErrorCode",
+    "CORSErrorCode",
     "SystemErrorCode",
     # ===== 錯誤類別 =====
     # 基礎錯誤類別
