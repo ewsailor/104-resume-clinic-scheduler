@@ -8,19 +8,19 @@
 import pytest
 
 # ===== 本地模組 =====
-# # 匯入單元測試的 fixtures
-# from tests.fixtures.unit.database import (  # noqa: F401
-#     db_session,
-# )
-# from tests.fixtures.unit.schedules import (  # noqa: F401
-#     test_giver_schedule,
-#     test_giver_schedule_data,
-#     test_taker_schedule,
-#     test_taker_schedule_data,
-# )
-# from tests.fixtures.unit.user import (  # noqa: F401
-#     test_user_data,
-# )
+# 匯入單元測試的 fixtures
+from tests.fixtures.unit.database import (  # noqa: F401
+    db_session,
+)
+from tests.fixtures.unit.schedules import (  # noqa: F401
+    test_giver_schedule,
+    test_giver_schedule_data,
+    test_taker_schedule,
+    test_taker_schedule_data,
+)
+from tests.fixtures.unit.user import (  # noqa: F401
+    test_user_data,
+)
 
 # # 匯入整合測試的 fixtures
 # from tests.fixtures.integration.database import (  # noqa: F401
