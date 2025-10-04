@@ -6,8 +6,9 @@
 # ===== 本地模組 =====
 from app.core import settings
 from app.factory import create_app, create_templates
+
 # from app.middleware.error_handler import setup_error_handlers
-from app.routers import main_router # api_router, health_router
+from app.routers import health_router, main_router  # api_router
 
 # ===== 應用程式初始化 =====
 # 建立應用程式實例
@@ -24,5 +25,5 @@ app.state.templates = templates
 
 # 註冊路由
 app.include_router(main_router)
-# app.include_router(health_router)
+app.include_router(health_router)
 # app.include_router(api_router)
