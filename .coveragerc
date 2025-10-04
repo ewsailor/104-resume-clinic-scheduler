@@ -1,0 +1,129 @@
+[run]
+# 覆蓋率分析配置
+source = app
+omit = 
+    # 應用程式入口和工廠函數
+    app/main.py
+    app/factory.py
+    
+    # 資料庫遷移檔案
+    */migrations/*
+    */alembic/*
+    alembic/env.py
+    alembic/script.py.mako
+    
+    # 測試相關檔案
+    */tests/*
+    tests/conftest.py
+    tests/fixtures/*
+    tests/utils/*
+    
+    # 開發和部署腳本
+    */scripts/*
+    scripts/clear_cache.py
+    scripts/fix_imports.py
+    
+    # 快取和暫存檔案
+    */__pycache__/*
+    */venv/*
+    */.venv/*
+    */node_modules/*
+    
+    # 配置和設定檔案
+    alembic.ini
+    pytest.ini
+    pyproject.toml
+    poetry.lock
+    .env
+    .env.example
+    
+    # 靜態檔案和模板
+    */static/*
+    */templates/*
+    app/templates/*
+    
+    # 文檔和說明檔案
+    */docs/*
+    README.md
+    *.md
+    
+    # 日誌檔案
+    */logs/*
+    logs/*
+    
+    # 覆蓋率報告檔案
+    htmlcov/*
+    coverage.xml
+    .coverage
+    
+    # 其他不需要測試的檔案
+    database/schema.sql
+
+    # 空 init 檔案
+    */__init__.py
+
+[report]
+# 排除不需要覆蓋的行
+exclude_lines =
+    # 覆蓋率排除標記
+    pragma: no cover
+    
+    # 常見魔術方法（僅 trivial 可排除）
+    def __repr__
+    def __str__
+    def __len__
+    def __bool__
+    def __iter__
+    def __next__
+    def __enter__
+    def __exit__
+    def __call__
+    
+    # 除錯模式相關的程式碼
+    if.*debug
+    if.*DEBUG
+    if settings\.debug
+    if settings\.DEBUG
+    if.*testing
+    if.*TESTING
+    if settings\.testing
+    if settings\.TESTING
+    
+    # 未實作
+    raise NotImplementedError
+    
+    # 條件編譯和死程式碼
+    if 0:
+    if False:
+    if __name__ == .__main__.:
+    if __name__ == "__main__":
+    
+    # 抽象類別和介面
+    @(abc\.)?abstractmethod
+    @abstractmethod
+    @abc\.abstractmethod
+        
+    # 測試相關（雖然已經排除檔案，但以防萬一）
+    def test_
+    class.*Test
+        
+    # 資料庫遷移
+    def upgrade
+    def downgrade
+    def migrate
+      
+    # 空函數和佔位符
+    def.*pass
+    def.*\.\.\.
+    def.*TODO
+    def.*FIXME
+    def.*XXX
+
+# 精確度設定
+precision = 2
+
+# 顯示缺失的行
+show_missing = True
+
+# 跳過覆蓋的檔案
+skip_covered = False
