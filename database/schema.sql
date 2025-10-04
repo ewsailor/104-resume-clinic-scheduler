@@ -68,7 +68,7 @@ CREATE INDEX `idx_users_created_at`
     ON `users` (`created_at`);
 
 
--- ===== 諮詢時段資料表 `schedules` ===== 
+-- ===== 時段資料表 `schedules` ===== 
 DROP TABLE IF EXISTS `schedules`;
 CREATE TABLE `schedules` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY 
