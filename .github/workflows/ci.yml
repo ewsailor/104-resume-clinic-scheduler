@@ -1,0 +1,79 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # 確保 CI 狀態正確回報給 GitHub
+    outputs:
+      success: ${{ steps.ci-status.outputs.success }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: "1.6.1"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          # 增加重試機制以處理網路問題
+          for i in {1..3}; do
+            poetry install --no-interaction --no-root && break
+            echo "嘗試 $i/3 失敗，等待 10 秒後重試..."
+            sleep 10
+          done
+
+      - name: Set test environment variables
+        run: |
+          echo "TESTING=true" >> $GITHUB_ENV
+          echo "APP_ENV=testing" >> $GITHUB_ENV
+
+      - name: Run pre-commit (lint + format + type check)
+        run: poetry run pre-commit run --all-files
+
+      - name: Run unit tests
+        run: poetry run pytest tests/unit/ -v --maxfail=3 --disable-warnings --tb=short
+
+      # - name: Run integration tests
+      #   run: poetry run pytest tests/integration/ -v --maxfail=3 --disable-warnings --tb=short --config-file=pytest-integration.ini
+
+      - name: Generate test coverage report
+        run: poetry run pytest tests/unit/ --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing
+
+      - name: Set CI Status
+        id: ci-status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 測試結果摘要" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.ci-status.outputs.success }}" == "true" ]; then
+            echo "- ✅ 程式碼檢查 (lint + format + type check)" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ 單元測試 (Unit Tests)" >> $GITHUB_STEP_SUMMARY
+            # echo "- ✅ 整合測試 (Integration Tests)" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ 測試覆蓋率報告 (Test Coverage Report)" >> $GITHUB_STEP_SUMMARY
+            echo "- 🎉 **所有檢查通過，可以合併到 main 分支！**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ 程式碼檢查或測試失敗" >> $GITHUB_STEP_SUMMARY
+            echo "- 🚫 **請修正問題後重新提交**" >> $GITHUB_STEP_SUMMARY
+          fi
