@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 # ===== 本地模組 =====
 from app.database import get_db
+from app.decorators import handle_api_errors_async
 
-# from app.decorators import handle_api_errors_async
 # from app.enums.models import ScheduleStatusEnum
 # from app.errors import create_bad_request_error
 from app.schemas import (  # ScheduleDeleteRequest,; SchedulePartialUpdateRequest,
@@ -135,7 +135,7 @@ router = APIRouter(prefix="/api/v1", tags=["Schedules"])
         },
     },
 )
-# @handle_api_errors_async()
+@handle_api_errors_async()
 async def create_schedules(
     request: ScheduleCreateRequest,
     db: Session = Depends(get_db),

@@ -12,11 +12,10 @@ from sqlalchemy.orm import Session
 
 # ===== 本地模組 =====
 from app.crud.schedule import ScheduleCRUD
-
-# from app.decorators import (
-#     handle_service_errors_sync,
-#     log_operation,
-# )
+from app.decorators import (
+    handle_service_errors_sync,
+    log_operation,
+)
 from app.enums.models import UserRoleEnum
 from app.enums.operations import OperationContext  # , DeletionResult
 
@@ -197,8 +196,8 @@ class ScheduleService:
 
         return schedule_orm_objects
 
-    # @handle_service_errors_sync("建立時段")
-    # @log_operation("建立時段")
+    @handle_service_errors_sync("建立時段")
+    @log_operation("建立時段")
     def create_schedules(
         self,
         db: Session,
