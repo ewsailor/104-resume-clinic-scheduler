@@ -10,9 +10,7 @@ from sqlalchemy.orm import Session
 # ===== 本地模組 =====
 from app.database import get_db
 from app.decorators import handle_api_errors_async
-
-# from app.enums.models import ScheduleStatusEnum
-# from app.errors import create_bad_request_error
+from app.errors import create_bad_request_error
 from app.schemas import (  # ScheduleDeleteRequest,; SchedulePartialUpdateRequest,
     ScheduleCreateRequest,
     ScheduleResponse,
@@ -150,9 +148,9 @@ async def create_schedules(
         list[ScheduleResponse]: 建立的時段列表。
     """
     # 驗證每個時段的時間邏輯
-    # for schedule in request.schedules:
-    #     if schedule.start_time >= schedule.end_time:
-    #         raise create_bad_request_error("開始時間必須早於結束時間")
+    for schedule in request.schedules:
+        if schedule.start_time >= schedule.end_time:
+            raise create_bad_request_error("開始時間必須早於結束時間")
 
     schedules = schedule_service.create_schedules(
         db,

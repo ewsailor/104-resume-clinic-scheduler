@@ -17,10 +17,10 @@ class OperationContext(str, Enum):
     ARCHIVE = "封存"  # 未來可能的新操作
 
 
-# class DeletionResult(str, Enum):
-#     """刪除結果枚舉"""
+class DeletionResult(str, Enum):
+    """刪除結果枚舉"""
 
-#     SUCCESS = "刪除成功"
-#     ALREADY_DELETED = "已經刪除"
-#     NOT_FOUND = "時段不存在"
-#     CANNOT_DELETE = "無法刪除"
+    SUCCESS = "刪除成功"
+    ALREADY_DELETED = "已經刪除"
+    NOT_FOUND = "時段不存在"
+    CANNOT_DELETE = "無法刪除"

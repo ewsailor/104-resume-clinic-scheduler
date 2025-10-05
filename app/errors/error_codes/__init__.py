@@ -13,15 +13,14 @@
 # ===== 本地模組 =====
 from .cors import CORSErrorCode
 from .crud import CRUDErrorCode
-
-# from .router import RouterErrorCode
-# from .service import ServiceErrorCode
+from .router import RouterErrorCode
+from .service import ServiceErrorCode
 from .system import SystemErrorCode
 
 # 匯出所有錯誤代碼類別
 __all__ = [
-    # "RouterErrorCode",
-    # "ServiceErrorCode",
+    "RouterErrorCode",
+    "ServiceErrorCode",
     "CRUDErrorCode",
     "CORSErrorCode",
     "SystemErrorCode",
