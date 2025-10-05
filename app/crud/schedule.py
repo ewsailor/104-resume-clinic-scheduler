@@ -8,10 +8,12 @@ import logging
 from typing import Any
 
 # ===== 第三方套件 =====
+from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, Session
 
 # ===== 本地模組 =====
 # from app.enums.operations import DeletionResult
+from app.enums.models import ScheduleStatusEnum
 from app.errors import (  # create_schedule_not_found_error,
     create_bad_request_error,
 )
@@ -98,56 +100,56 @@ class ScheduleCRUD:
         # 返回查詢選項列表
         return options
 
-    # def _apply_filters(
-    #     self,
-    #     query: Any,
-    #     giver_id: int | None = None,
-    #     taker_id: int | None = None,
-    #     status_filter: str | None = None,
-    #     include_deleted: bool = False,
-    # ) -> Any:
-    #     """套用篩選條件到查詢。"""
-    #     filters = []
+    def _apply_filters(
+        self,
+        query: Any,
+        giver_id: int | None = None,
+        taker_id: int | None = None,
+        status_filter: str | None = None,
+        include_deleted: bool = False,
+    ) -> Any:
+        """套用篩選條件到查詢。"""
+        filters = []
 
-    #     # 排除已軟刪除的記錄
-    #     if not include_deleted:
-    #         filters.append(Schedule.deleted_at.is_(None))
+        # 排除已軟刪除的記錄
+        if not include_deleted:
+            filters.append(Schedule.deleted_at.is_(None))
 
-    #     # 套用其他篩選條件
-    #     if giver_id is not None:
-    #         filters.append(Schedule.giver_id == giver_id)  # type: ignore
-    #     if taker_id is not None:
-    #         filters.append(Schedule.taker_id == taker_id)  # type: ignore
-    #     if status_filter is not None:
-    #         status_enum = ScheduleStatusEnum(status_filter)
-    #         filters.append(Schedule.status == status_enum)  # type: ignore
+        # 套用其他篩選條件
+        if giver_id is not None:
+            filters.append(Schedule.giver_id == giver_id)  # type: ignore
+        if taker_id is not None:
+            filters.append(Schedule.taker_id == taker_id)  # type: ignore
+        if status_filter is not None:
+            status_enum = ScheduleStatusEnum(status_filter)
+            filters.append(Schedule.status == status_enum)  # type: ignore
 
-    #     # 如果 filters 列表不為空時，使用 and_ 組合所有篩選條件
-    #     if filters:
-    #         return query.filter(and_(*filters))
+        # 如果 filters 列表不為空時，使用 and_ 組合所有篩選條件
+        if filters:
+            return query.filter(and_(*filters))
 
-    #     return query
+        return query
 
-    # def list_schedules(
-    #     self,
-    #     db: Session,
-    #     giver_id: int | None = None,
-    #     taker_id: int | None = None,
-    #     status_filter: str | None = None,
-    # ) -> list[Schedule]:
-    #     """查詢時段列表，排除已軟刪除的記錄。"""
-    #     query = db.query(Schedule).options(*self.get_schedule_query_options())
+    def list_schedules(
+        self,
+        db: Session,
+        giver_id: int | None = None,
+        taker_id: int | None = None,
+        status_filter: str | None = None,
+    ) -> list[Schedule]:
+        """查詢時段列表，排除已軟刪除的記錄。"""
+        query = db.query(Schedule).options(*self.get_schedule_query_options())
 
-    #     query = self._apply_filters(
-    #         query,
-    #         giver_id=giver_id,
-    #         taker_id=taker_id,
-    #         status_filter=status_filter,
-    #     )
+        query = self._apply_filters(
+            query,
+            giver_id=giver_id,
+            taker_id=taker_id,
+            status_filter=status_filter,
+        )
 
-    #     schedules = query.all()
+        schedules = query.all()
 
-    #     return schedules
+        return schedules
 
     # def get_schedule(
     #     self,

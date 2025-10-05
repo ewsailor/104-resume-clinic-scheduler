@@ -237,27 +237,27 @@ class ScheduleService:
 
         return created_schedules
 
-    # @handle_service_errors_sync("查詢時段列表")
-    # @log_operation("查詢時段列表")
-    # def list_schedules(
-    #     self,
-    #     db: Session,
-    #     giver_id: int | None = None,
-    #     taker_id: int | None = None,
-    #     status_filter: str | None = None,
-    # ) -> list[Schedule]:
-    #     """查詢時段列表。"""
-    #     # 呼叫 CRUD 層進行資料庫查詢，支援多種篩選條件
-    #     schedules = self.schedule_crud.list_schedules(
-    #         db, giver_id, taker_id, status_filter
-    #     )
+    @handle_service_errors_sync("查詢時段列表")
+    @log_operation("查詢時段列表")
+    def list_schedules(
+        self,
+        db: Session,
+        giver_id: int | None = None,
+        taker_id: int | None = None,
+        status_filter: str | None = None,
+    ) -> list[Schedule]:
+        """查詢時段列表。"""
+        # 呼叫 CRUD 層進行資料庫查詢，支援多種篩選條件
+        schedules = self.schedule_crud.list_schedules(
+            db, giver_id, taker_id, status_filter
+        )
 
-    #     logger.info(
-    #         f"查詢時段列表完成: giver_id={giver_id}, taker_id={taker_id}, "
-    #         f"status_filter={status_filter}, 找到 {len(schedules)} 個時段"
-    #     )
+        logger.info(
+            f"查詢時段列表完成: giver_id={giver_id}, taker_id={taker_id}, "
+            f"status_filter={status_filter}, 找到 {len(schedules)} 個時段"
+        )
 
-    #     return schedules
+        return schedules
 
     # @handle_service_errors_sync("查詢單一時段")
     # @log_operation("查詢單一時段")

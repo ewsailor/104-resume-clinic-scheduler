@@ -4,12 +4,13 @@
 """
 
 # ===== 第三方套件 =====
-from fastapi import APIRouter, Depends, status  # , Path, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 # ===== 本地模組 =====
 from app.database import get_db
 from app.decorators import handle_api_errors_async
+from app.enums.models import ScheduleStatusEnum
 from app.errors import create_bad_request_error
 from app.schemas import (  # ScheduleDeleteRequest,; SchedulePartialUpdateRequest,
     ScheduleCreateRequest,
@@ -163,106 +164,107 @@ async def create_schedules(
     return [ScheduleResponse.model_validate(schedule) for schedule in schedules]
 
 
-# @router.get(
-#     "/schedules",
-#     response_model=list[ScheduleResponse],
-#     status_code=status.HTTP_200_OK,
-#     summary="取得時段列表",
-#     description="""
-# ## 功能簡介
-# - 查詢時段列表，支援多種篩選條件
-# - 可根據 Giver、Taker、狀態進行篩選
+@router.get(
+    "/schedules",
+    response_model=list[ScheduleResponse],
+    status_code=status.HTTP_200_OK,
+    summary="取得時段列表",
+    description="""
+## 功能簡介
+- 查詢時段列表，支援多種篩選條件
+- 可根據 Giver、Taker、狀態進行篩選
 
-# ### 使用場景
-# - Taker 查看 Giver 提供的可預約時段，以利預約面談
-# - Giver 查看 Taker 提供的時段，以利回覆自己是否方便面談
-# - 系統管理員查看所有尚未回覆的時段，以利發送提醒訊息給 Giver、Taker
+### 使用場景
+- Taker 查看 Giver 提供的可預約時段，以利預約面談
+- Giver 查看 Taker 提供的時段，以利回覆自己是否方便面談
+- 系統管理員查看所有尚未回覆的時段，以利發送提醒訊息給 Giver、Taker
 
-# ### 查詢參數
-# - 不提供參數：取得所有時段
-# - **giver_id**: 篩選特定 Giver 的時段（必須大於 0）
-# - **taker_id**: 篩選特定 Taker 的時段（必須大於 0）
-# - **status_filter**: 篩選特定狀態的時段（DRAFT、AVAILABLE、PENDING、ACCEPTED、REJECTED、CANCELLED、COMPLETED）
+### 查詢參數
+- 不提供參數：取得所有時段
+- **giver_id**: 篩選特定 Giver 的時段（必須大於 0）
+- **taker_id**: 篩選特定 Taker 的時段（必須大於 0）
+- **status_filter**: 篩選特定狀態的時段（DRAFT、AVAILABLE、PENDING、ACCEPTED、REJECTED、CANCELLED、COMPLETED）
 
-# ### 回應狀態
-# - **200 OK**: 成功取得時段列表
-# - **422 Unprocessable Entity**: 參數驗證錯誤
-#     """,
-#     responses={
-#         200: {
-#             "description": "成功取得時段列表",
-#             "content": {
-#                 "application/json": {
-#                     "example": [
-#                         {
-#                             "id": 1,
-#                             "giver_id": 1,
-#                             "taker_id": 1,
-#                             "status": "PENDING",
-#                             "date": "2024-01-01",
-#                             "start_time": "09:00:00",
-#                             "end_time": "10:00:00",
-#                             "note": "成功取得時段列表",
-#                             "created_at": "2024-01-01T00:00:00Z",
-#                             "created_by": 1,
-#                             "created_by_role": "TAKER",
-#                             "updated_at": "2024-01-01T00:00:00Z",
-#                             "updated_by": 1,
-#                             "updated_by_role": "TAKER",
-#                             "deleted_at": "null",
-#                             "deleted_by": "null",
-#                             "deleted_by_role": "null",
-#                         }
-#                     ]
-#                 }
-#             },
-#         },
-#         422: {
-#             "description": "參數驗證錯誤",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "detail": [
-#                             {
-#                                 "type": "validation_error_type",
-#                                 "loc": ["path", "to", "field"],
-#                                 "msg": "具體錯誤訊息",
-#                                 "input": "無效的輸入值",
-#                                 "ctx": {"error": "錯誤上下文"},
-#                             }
-#                         ]
-#                     }
-#                 }
-#             },
-#         },
-#     },
-# )
-# @handle_api_errors_async()
-# async def list_schedules(
-#     giver_id: int | None = Query(None, gt=0, description="Giver ID，必須大於 0"),
-#     taker_id: int | None = Query(None, gt=0, description="Taker ID，必須大於 0"),
-#     status_filter: ScheduleStatusEnum | None = None,
-#     db: Session = Depends(get_db),
-# ) -> list[ScheduleResponse]:
-#     """取得時段列表：查詢時段列表，支援多種篩選條件。
+### 回應狀態
+- **200 OK**: 成功取得時段列表
+- **422 Unprocessable Entity**: 參數驗證錯誤
+    """,
+    responses={
+        200: {
+            "description": "成功取得時段列表",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": 1,
+                            "giver_id": 1,
+                            "taker_id": 1,
+                            "status": "PENDING",
+                            "date": "2024-01-01",
+                            "start_time": "09:00:00",
+                            "end_time": "10:00:00",
+                            "note": "成功取得時段列表",
+                            "created_at": "2024-01-01T00:00:00Z",
+                            "created_by": 1,
+                            "created_by_role": "TAKER",
+                            "updated_at": "2024-01-01T00:00:00Z",
+                            "updated_by": 1,
+                            "updated_by_role": "TAKER",
+                            "deleted_at": "null",
+                            "deleted_by": "null",
+                            "deleted_by_role": "null",
+                        }
+                    ]
+                }
+            },
+        },
+        422: {
+            "description": "參數驗證錯誤",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "type": "validation_error_type",
+                                "loc": ["path", "to", "field"],
+                                "msg": "具體錯誤訊息",
+                                "input": "無效的輸入值",
+                                "ctx": {"error": "錯誤上下文"},
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+    },
+)
+@handle_api_errors_async()
+async def list_schedules(
+    giver_id: int | None = Query(None, gt=0, description="Giver ID，必須大於 0"),
+    taker_id: int | None = Query(None, gt=0, description="Taker ID，必須大於 0"),
+    status_filter: ScheduleStatusEnum | None = None,
+    db: Session = Depends(get_db),
+) -> list[ScheduleResponse]:
+    """取得時段列表：查詢時段列表，支援多種篩選條件。
 
-#     Args:
-#         giver_id (int | None): Giver ID 篩選條件，必須大於 0。
-#         taker_id (int | None): Taker ID 篩選條件，必須大於 0。
-#         status_filter (ScheduleStatusEnum | None): 狀態篩選條件。
-#         db (Session): 資料庫會話。
+    Args:
+        giver_id (int | None): Giver ID 篩選條件，必須大於 0。
+        taker_id (int | None): Taker ID 篩選條件，必須大於 0。
+        status_filter (ScheduleStatusEnum | None): 狀態篩選條件。
+        db (Session): 資料庫會話。
 
-#     Returns:
-#         list[ScheduleResponse]: 時段列表。
-#     """
-#     schedules = schedule_service.list_schedules(
-#         db,
-#         giver_id,
-#         taker_id,
-#         status_filter,
-#     )
+    Returns:
+        list[ScheduleResponse]: 時段列表。
+    """
+    schedules = schedule_service.list_schedules(
+        db,
+        giver_id,
+        taker_id,
+        status_filter,
+    )
 
-#     return [ScheduleResponse.model_validate(schedule) for schedule in schedules]
+    # 資料序列化：使用 Pydantic 將 SQLAlchemy ORM 模型轉換為 API 回應格式
+    return [ScheduleResponse.model_validate(schedule) for schedule in schedules]
 
 
 # @router.get(
