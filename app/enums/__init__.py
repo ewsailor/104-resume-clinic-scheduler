@@ -7,13 +7,13 @@
 
 # ===== 本地模組 =====
 from .models import ScheduleStatusEnum, UserRoleEnum
-
-# from .operations import OperationContext
+from .operations import OperationContext  # , DeletionResult
 
 __all__ = [
     # 模型相關
     "UserRoleEnum",
     "ScheduleStatusEnum",
     # 操作相關
-    # "OperationContext",
+    "OperationContext",
+    # "DeletionResult",
 ]

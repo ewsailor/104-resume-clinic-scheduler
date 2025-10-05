@@ -7,13 +7,13 @@
 """
 
 # ===== 本地模組 =====
-# from .api import api_router
+from .api import api_router
 from .health import router as health_router
 from .main import router as main_router
 
 __all__ = [
     # 對外匯出的路由器
-    # "api_router",
+    "api_router",
     "health_router",
     "main_router",
 ]

@@ -5,10 +5,11 @@
 
 # ===== 本地模組 =====
 from app.core import settings
+from app.database import initialize_database
 from app.factory import create_app, create_static_files, create_templates
 from app.middleware.cors import log_app_startup, setup_cors_middleware
 from app.middleware.error_handler import setup_error_handlers
-from app.routers import health_router, main_router  # api_router
+from app.routers import api_router, health_router, main_router
 
 # ===== 應用程式初始化 =====
 # 建立應用程式實例
@@ -16,6 +17,9 @@ app = create_app(settings)
 
 # 記錄應用程式啟動資訊
 log_app_startup(app)
+
+# 初始化資料庫
+initialize_database()
 
 # CORS 中間件設定
 setup_cors_middleware(app)
@@ -33,7 +37,7 @@ app.state.templates = templates
 # ===== 路由註冊 =====
 app.include_router(main_router)
 app.include_router(health_router)
-# app.include_router(api_router)
+app.include_router(api_router)
 
 # ===== 靜態檔案掛載 =====
 app.mount(settings.static_url, create_static_files(settings), name=settings.static_name)
