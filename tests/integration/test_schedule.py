@@ -634,181 +634,181 @@ class TestScheduleRoutes:
         assert "msg" in error_detail
         assert "input" in error_detail
 
-    # # ===== 刪除時段 =====
-    # def test_delete_schedule_success(
-    #     self,
-    #     client,
-    #     schedule_in_db,
-    #     schedule_delete_payload,
-    #     integration_db_session,
-    # ):
-    #     """測試刪除時段 - 成功（204）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
-    #     schedule_id = schedule_in_db.id
+    # ===== 刪除時段 =====
+    def test_delete_schedule_success(
+        self,
+        client,
+        schedule_in_db,
+        schedule_delete_payload,
+        integration_db_session,
+    ):
+        """測試刪除時段 - 成功（204）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
+        schedule_id = schedule_in_db.id
 
-    #     # WHEN：呼叫刪除時段 API
-    #     # client.delete() 不支援 json、data 參數，故使用 client.request() 方法
-    #     response = client.request(
-    #         "DELETE",
-    #         f"/api/v1/schedules/{schedule_id}",
-    #         json=schedule_delete_payload,
-    #     )
+        # WHEN：呼叫刪除時段 API
+        # client.delete() 不支援 json、data 參數，故使用 client.request() 方法
+        response = client.request(
+            "DELETE",
+            f"/api/v1/schedules/{schedule_id}",
+            json=schedule_delete_payload,
+        )
 
-    #     # THEN：確認刪除成功
-    #     assert response.status_code == status.HTTP_204_NO_CONTENT
-    #     assert response.content == b""  # 204 回應應該為空
+        # THEN：確認刪除成功
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response.content == b""  # 204 回應應該為空
 
-    #     # ===== 查詢資料庫，驗證軟刪除的內容是否正確 =====
-    #     # 查主鍵，故使用 get() 而不是 .query().filter(...).first()
-    #     db_schedule = integration_db_session.get(ScheduleModel, schedule_id)
+        # ===== 查詢資料庫，驗證軟刪除的內容是否正確 =====
+        # 查主鍵，故使用 get() 而不是 .query().filter(...).first()
+        db_schedule = integration_db_session.get(ScheduleModel, schedule_id)
 
-    #     # 驗證記錄存在（軟刪除不會真正刪除記錄）
-    #     assert db_schedule is not None
+        # 驗證記錄存在（軟刪除不會真正刪除記錄）
+        assert db_schedule is not None
 
-    #     # 驗證基本欄位保持不變
-    #     assert db_schedule.id == schedule_id
-    #     assert db_schedule.giver_id == 1
-    #     assert db_schedule.taker_id is None
-    #     assert db_schedule.note == "資料庫中的時段資料"  # 夾具中的資料
-    #     assert db_schedule.created_by is None  # 夾具中沒有設定 created_by
-    #     assert db_schedule.created_by_role == "SYSTEM"  # 預設角色
-    #     assert db_schedule.updated_by == 1
-    #     assert db_schedule.updated_by_role == "GIVER"
+        # 驗證基本欄位保持不變
+        assert db_schedule.id == schedule_id
+        assert db_schedule.giver_id == 1
+        assert db_schedule.taker_id is None
+        assert db_schedule.note == "資料庫中的時段資料"  # 夾具中的資料
+        assert db_schedule.created_by is None  # 夾具中沒有設定 created_by
+        assert db_schedule.created_by_role == "SYSTEM"  # 預設角色
+        assert db_schedule.updated_by == 1
+        assert db_schedule.updated_by_role == "GIVER"
 
-    #     # ORM 將資料庫中 Enum 物件，轉回 Python 的 Enum 物件，故可以直接用 Enum 比對
-    #     # 刪除時段時，狀態會自動改為 CANCELLED
-    #     assert db_schedule.status == ScheduleStatusEnum.CANCELLED
+        # ORM 將資料庫中 Enum 物件，轉回 Python 的 Enum 物件，故可以直接用 Enum 比對
+        # 刪除時段時，狀態會自動改為 CANCELLED
+        assert db_schedule.status == ScheduleStatusEnum.CANCELLED
 
-    #     # 驗證 ORM 資料型別轉換
-    #     # 1. 請求階段，API 傳入的 date、time 是 JSON 字串格式
-    #     # 2. Pydantic schema 將 JSON 字串，轉成 Python 的 date、time 物件
-    #     # 3. ORM 將 Python 的 date、time 物件，寫入 MySQL/MariaDB 資料庫成 DATE、TIME 物件
-    #     # 4. 查詢資料庫時，ORM 將資料庫中 DATE、TIME 物件，轉回 Python 的 date、time 物件
-    #     assert db_schedule.date == date(2024, 12, 25)
-    #     assert db_schedule.start_time == time(9, 0, 0)
-    #     assert db_schedule.end_time == time(10, 0, 0)
-    #     # 驗證 ORM 物件轉為字串後，與原始請求一致 (JSON 格式)
-    #     assert str(db_schedule.date) == "2024-12-25"
-    #     assert str(db_schedule.start_time) == "09:00:00"
-    #     assert str(db_schedule.end_time) == "10:00:00"
+        # 驗證 ORM 資料型別轉換
+        # 1. 請求階段，API 傳入的 date、time 是 JSON 字串格式
+        # 2. Pydantic schema 將 JSON 字串，轉成 Python 的 date、time 物件
+        # 3. ORM 將 Python 的 date、time 物件，寫入 MySQL/MariaDB 資料庫成 DATE、TIME 物件
+        # 4. 查詢資料庫時，ORM 將資料庫中 DATE、TIME 物件，轉回 Python 的 date、time 物件
+        assert db_schedule.date == date(2024, 12, 25)
+        assert db_schedule.start_time == time(9, 0, 0)
+        assert db_schedule.end_time == time(10, 0, 0)
+        # 驗證 ORM 物件轉為字串後，與原始請求一致 (JSON 格式)
+        assert str(db_schedule.date) == "2024-12-25"
+        assert str(db_schedule.start_time) == "09:00:00"
+        assert str(db_schedule.end_time) == "10:00:00"
 
-    #     # 時間戳記驗證
-    #     assert db_schedule.created_at is not None
-    #     assert db_schedule.updated_at is not None
+        # 時間戳記驗證
+        assert db_schedule.created_at is not None
+        assert db_schedule.updated_at is not None
 
-    #     # 軟刪除相關（刪除後應設定）
-    #     assert db_schedule.deleted_at is not None  # 刪除時間應該被設定
-    #     assert db_schedule.deleted_by == 1  # 刪除者應為 1
-    #     assert db_schedule.deleted_by_role == "GIVER"  # 刪除者角色應為 GIVER
+        # 軟刪除相關（刪除後應設定）
+        assert db_schedule.deleted_at is not None  # 刪除時間應該被設定
+        assert db_schedule.deleted_by == 1  # 刪除者應為 1
+        assert db_schedule.deleted_by_role == "GIVER"  # 刪除者角色應為 GIVER
 
-    #     # 驗證 is_deleted 屬性
-    #     assert db_schedule.is_deleted is True
-    #     assert db_schedule.is_active is False
+        # 驗證 is_deleted 屬性
+        assert db_schedule.is_deleted is True
+        assert db_schedule.is_active is False
 
-    # def test_delete_schedule_not_found(self, client, schedule_delete_payload):
-    #     """測試刪除時段 - 時段不存在（404）。"""
-    #     # GIVEN：不存在的時段 ID 和有效的刪除資料
+    def test_delete_schedule_not_found(self, client, schedule_delete_payload):
+        """測試刪除時段 - 時段不存在（404）。"""
+        # GIVEN：不存在的時段 ID 和有效的刪除資料
 
-    #     # WHEN：呼叫刪除時段 API
-    #     response = client.request(
-    #         "DELETE",
-    #         "/api/v1/schedules/99999",
-    #         json=schedule_delete_payload,
-    #     )
+        # WHEN：呼叫刪除時段 API
+        response = client.request(
+            "DELETE",
+            "/api/v1/schedules/99999",
+            json=schedule_delete_payload,
+        )
 
-    #     # THEN：確認返回找不到錯誤
-    #     assert response.status_code == status.HTTP_404_NOT_FOUND
-    #     data = response.json()
-    #     assert "error" in data
+        # THEN：確認返回找不到錯誤
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        data = response.json()
+        assert "error" in data
 
-    #     # 驗證錯誤回應的完整格式
-    #     error = data["error"]
-    #     assert error["message"] == "時段不存在: ID=99999"
-    #     assert error["status_code"] == 404
-    #     assert error["code"] == "SERVICE_SCHEDULE_NOT_FOUND"
-    #     assert "timestamp" in error
-    #     assert "details" in error
+        # 驗證錯誤回應的完整格式
+        error = data["error"]
+        assert error["message"] == "時段不存在: ID=99999"
+        assert error["status_code"] == 404
+        assert error["code"] == "SERVICE_SCHEDULE_NOT_FOUND"
+        assert "timestamp" in error
+        assert "details" in error
 
-    # @pytest.mark.parametrize(
-    #     "status_enum,expected_status_name",
-    #     [
-    #         (ScheduleStatusEnum.ACCEPTED, "ACCEPTED"),
-    #         (ScheduleStatusEnum.COMPLETED, "COMPLETED"),
-    #     ],
-    # )
-    # def test_delete_schedule_cannot_be_deleted(
-    #     self,
-    #     client,
-    #     schedule_in_db,
-    #     schedule_delete_payload,
-    #     status_enum,
-    #     expected_status_name,
-    # ):
-    #     """測試刪除時段 - 時段無法刪除錯誤（409）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具），但狀態不允許刪除
-    #     schedule_id = schedule_in_db.id
+    @pytest.mark.parametrize(
+        "status_enum,expected_status_name",
+        [
+            (ScheduleStatusEnum.ACCEPTED, "ACCEPTED"),
+            (ScheduleStatusEnum.COMPLETED, "COMPLETED"),
+        ],
+    )
+    def test_delete_schedule_cannot_be_deleted(
+        self,
+        client,
+        schedule_in_db,
+        schedule_delete_payload,
+        status_enum,
+        expected_status_name,
+    ):
+        """測試刪除時段 - 時段無法刪除錯誤（409）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具），但狀態不允許刪除
+        schedule_id = schedule_in_db.id
 
-    #     # 將時段狀態設為不允許刪除的狀態
-    #     schedule_in_db.status = status_enum
+        # 將時段狀態設為不允許刪除的狀態
+        schedule_in_db.status = status_enum
 
-    #     # WHEN：呼叫刪除時段 API
-    #     response = client.request(
-    #         "DELETE",
-    #         f"/api/v1/schedules/{schedule_id}",
-    #         json=schedule_delete_payload,
-    #     )
+        # WHEN：呼叫刪除時段 API
+        response = client.request(
+            "DELETE",
+            f"/api/v1/schedules/{schedule_id}",
+            json=schedule_delete_payload,
+        )
 
-    #     # THEN：確認返回時段無法刪除錯誤
-    #     assert response.status_code == status.HTTP_409_CONFLICT
-    #     data = response.json()
-    #     assert "error" in data
+        # THEN：確認返回時段無法刪除錯誤
+        assert response.status_code == status.HTTP_409_CONFLICT
+        data = response.json()
+        assert "error" in data
 
-    #     # 驗證錯誤回應的完整格式
-    #     error = data["error"]
-    #     assert "時段無法刪除" in error["message"]
-    #     assert "ID=" in error["message"]
-    #     assert error["status_code"] == 409
-    #     assert error["code"] == "SERVICE_SCHEDULE_CANNOT_BE_DELETED"
-    #     assert "timestamp" in error
-    #     assert "details" in error
-    #     assert "reason" in error["details"]
-    #     assert "current_status" in error["details"]
-    #     assert "explanation" in error["details"]
+        # 驗證錯誤回應的完整格式
+        error = data["error"]
+        assert "時段無法刪除" in error["message"]
+        assert "ID=" in error["message"]
+        assert error["status_code"] == 409
+        assert error["code"] == "SERVICE_SCHEDULE_CANNOT_BE_DELETED"
+        assert "timestamp" in error
+        assert "details" in error
+        assert "reason" in error["details"]
+        assert "current_status" in error["details"]
+        assert "explanation" in error["details"]
 
-    #     # 驗證當前狀態
-    #     assert error["details"]["current_status"] == expected_status_name
+        # 驗證當前狀態
+        assert error["details"]["current_status"] == expected_status_name
 
-    # def test_delete_schedule_validation_error(
-    #     self, client, schedule_in_db, schedule_delete_payload
-    # ):
-    #     """測試刪除時段 - 參數驗證錯誤（422）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
-    #     schedule_id = schedule_in_db.id
+    def test_delete_schedule_validation_error(
+        self, client, schedule_in_db, schedule_delete_payload
+    ):
+        """測試刪除時段 - 參數驗證錯誤（422）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
+        schedule_id = schedule_in_db.id
 
-    #     # 修改為無效的刪除資料，創造 422 錯誤
-    #     invalid_data = schedule_delete_payload.copy()
-    #     invalid_data["deleted_by"] = -1  # 無效的 deleted_by（必須大於 0）
+        # 修改為無效的刪除資料，創造 422 錯誤
+        invalid_data = schedule_delete_payload.copy()
+        invalid_data["deleted_by"] = -1  # 無效的 deleted_by（必須大於 0）
 
-    #     # WHEN：呼叫刪除時段 API
-    #     response = client.request(
-    #         "DELETE",
-    #         f"/api/v1/schedules/{schedule_id}",
-    #         json=invalid_data,
-    #     )
+        # WHEN：呼叫刪除時段 API
+        response = client.request(
+            "DELETE",
+            f"/api/v1/schedules/{schedule_id}",
+            json=invalid_data,
+        )
 
-    #     # THEN：確認返回驗證錯誤
-    #     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    #     data = response.json()
-    #     assert "detail" in data
+        # THEN：確認返回驗證錯誤
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        data = response.json()
+        assert "detail" in data
 
-    #     # 驗證 422 錯誤的完整格式
-    #     detail = data["detail"]
-    #     assert isinstance(detail, list)
-    #     assert len(detail) > 0
+        # 驗證 422 錯誤的完整格式
+        detail = data["detail"]
+        assert isinstance(detail, list)
+        assert len(detail) > 0
 
-    #     # 驗證錯誤詳情的結構
-    #     error_detail = detail[0]
-    #     assert "type" in error_detail
-    #     assert "loc" in error_detail
-    #     assert "msg" in error_detail
-    #     assert "input" in error_detail
+        # 驗證錯誤詳情的結構
+        error_detail = detail[0]
+        assert "type" in error_detail
+        assert "loc" in error_detail
+        assert "msg" in error_detail
+        assert "input" in error_detail
