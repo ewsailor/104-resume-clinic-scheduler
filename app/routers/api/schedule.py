@@ -4,7 +4,7 @@
 """
 
 # ===== 第三方套件 =====
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy.orm import Session
 
 # ===== 本地模組 =====
@@ -267,106 +267,106 @@ async def list_schedules(
     return [ScheduleResponse.model_validate(schedule) for schedule in schedules]
 
 
-# @router.get(
-#     "/schedules/{schedule_id}",
-#     response_model=ScheduleResponse,
-#     status_code=status.HTTP_200_OK,
-#     summary="取得單一時段",
-#     description="""
-# ## 功能簡介
-# - 根據時段 ID 取得單一時段的完整資訊
+@router.get(
+    "/schedules/{schedule_id}",
+    response_model=ScheduleResponse,
+    status_code=status.HTTP_200_OK,
+    summary="取得單一時段",
+    description="""
+## 功能簡介
+- 根據時段 ID 取得單一時段的完整資訊
 
-# ### 使用場景
-# - 查看時段詳細資訊
-# - 查看時段回覆狀態是否有更新
+### 使用場景
+- 查看時段詳細資訊
+- 查看時段回覆狀態是否有更新
 
-# ### 路徑參數
-# - **schedule_id**: 時段 ID（必填，必須大於 0）
+### 路徑參數
+- **schedule_id**: 時段 ID（必填，必須大於 0）
 
-# ### 回應狀態
-# - **200 OK**: 成功取得時段資訊
-# - **404 Not Found**: 時段不存在錯誤
-# - **422 Unprocessable Entity**: 參數驗證錯誤
-#     """,
-#     responses={
-#         200: {
-#             "description": "成功取得時段資訊",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "id": 1,
-#                         "giver_id": 1,
-#                         "taker_id": 1,
-#                         "status": "PENDING",
-#                         "date": "2024-01-01",
-#                         "start_time": "09:00:00",
-#                         "end_time": "10:00:00",
-#                         "note": "成功取得時段資訊",
-#                         "created_at": "2024-01-01T00:00:00Z",
-#                         "created_by": 1,
-#                         "created_by_role": "TAKER",
-#                         "updated_at": "2024-01-01T00:00:00Z",
-#                         "updated_by": 1,
-#                         "updated_by_role": "TAKER",
-#                         "deleted_at": "null",
-#                         "deleted_by": "null",
-#                         "deleted_by_role": "null",
-#                     }
-#                 }
-#             },
-#         },
-#         404: {
-#             "description": "時段不存在錯誤（Service 拋出錯誤，由 Route 捕捉）",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "error": {
-#                             "message": "時段不存在: ID=schedule_id",
-#                             "status_code": 404,
-#                             "code": "SERVICE_SCHEDULE_NOT_FOUND",
-#                             "timestamp": "2024-01-01T00:00:00Z",
-#                             "details": {},
-#                         }
-#                     }
-#                 }
-#             },
-#         },
-#         422: {
-#             "description": "參數驗證錯誤",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "detail": [
-#                             {
-#                                 "type": "validation_error_type",
-#                                 "loc": ["path", "to", "field"],
-#                                 "msg": "具體錯誤訊息",
-#                                 "input": "無效的輸入值",
-#                                 "ctx": {"error": "錯誤上下文"},
-#                             }
-#                         ]
-#                     }
-#                 }
-#             },
-#         },
-#     },
-# )
-# @handle_api_errors_async()
-# async def get_schedule(
-#     schedule_id: int = Path(..., gt=0, description="時段 ID，必填，必須大於 0"),
-#     db: Session = Depends(get_db),
-# ) -> ScheduleResponse:
-#     """取得單一時段：根據時段 ID 取得單一時段的詳細資訊。
+### 回應狀態
+- **200 OK**: 成功取得時段資訊
+- **404 Not Found**: 時段不存在錯誤
+- **422 Unprocessable Entity**: 參數驗證錯誤
+    """,
+    responses={
+        200: {
+            "description": "成功取得時段資訊",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "giver_id": 1,
+                        "taker_id": 1,
+                        "status": "PENDING",
+                        "date": "2024-01-01",
+                        "start_time": "09:00:00",
+                        "end_time": "10:00:00",
+                        "note": "成功取得時段資訊",
+                        "created_at": "2024-01-01T00:00:00Z",
+                        "created_by": 1,
+                        "created_by_role": "TAKER",
+                        "updated_at": "2024-01-01T00:00:00Z",
+                        "updated_by": 1,
+                        "updated_by_role": "TAKER",
+                        "deleted_at": "null",
+                        "deleted_by": "null",
+                        "deleted_by_role": "null",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "時段不存在錯誤（Service 拋出錯誤，由 Route 捕捉）",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "message": "時段不存在: ID=schedule_id",
+                            "status_code": 404,
+                            "code": "SERVICE_SCHEDULE_NOT_FOUND",
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "details": {},
+                        }
+                    }
+                }
+            },
+        },
+        422: {
+            "description": "參數驗證錯誤",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "type": "validation_error_type",
+                                "loc": ["path", "to", "field"],
+                                "msg": "具體錯誤訊息",
+                                "input": "無效的輸入值",
+                                "ctx": {"error": "錯誤上下文"},
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+    },
+)
+@handle_api_errors_async()
+async def get_schedule(
+    schedule_id: int = Path(..., gt=0, description="時段 ID，必填，必須大於 0"),
+    db: Session = Depends(get_db),
+) -> ScheduleResponse:
+    """取得單一時段：根據時段 ID 取得單一時段的詳細資訊。
 
-#     Args:
-#         schedule_id (int): 時段 ID，必填，必須大於 0。
-#         db (Session): 資料庫會話。
+    Args:
+        schedule_id (int): 時段 ID，必填，必須大於 0。
+        db (Session): 資料庫會話。
 
-#     Returns:
-#         ScheduleResponse: 時段詳細資訊。
-#     """
-#     schedule = schedule_service.get_schedule(db, schedule_id)
-#     return ScheduleResponse.model_validate(schedule)
+    Returns:
+        ScheduleResponse: 時段詳細資訊。
+    """
+    schedule = schedule_service.get_schedule(db, schedule_id)
+    return ScheduleResponse.model_validate(schedule)
 
 
 # @router.patch(

@@ -14,8 +14,8 @@ from sqlalchemy.orm import joinedload, Session
 # ===== 本地模組 =====
 # from app.enums.operations import DeletionResult
 from app.enums.models import ScheduleStatusEnum
-from app.errors import (  # create_schedule_not_found_error,
-    create_bad_request_error,
+from app.errors import (
+    create_schedule_not_found_error,
 )
 from app.models.schedule import Schedule
 
@@ -151,38 +151,38 @@ class ScheduleCRUD:
 
         return schedules
 
-    # def get_schedule(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    # ) -> Schedule:
-    #     """根據 ID 查詢單一時段，排除已軟刪除的記錄。"""
-    #     query = db.query(Schedule).options(*self.get_schedule_query_options())
+    def get_schedule(
+        self,
+        db: Session,
+        schedule_id: int,
+    ) -> Schedule:
+        """根據 ID 查詢單一時段，排除已軟刪除的記錄。"""
+        query = db.query(Schedule).options(*self.get_schedule_query_options())
 
-    #     query = self._apply_filters(query).filter(Schedule.id == schedule_id)
+        query = self._apply_filters(query).filter(Schedule.id == schedule_id)
 
-    #     schedule = query.first()
+        schedule = query.first()
 
-    #     if not schedule:
-    #         raise create_schedule_not_found_error(schedule_id)
+        if not schedule:
+            raise create_schedule_not_found_error(schedule_id)
 
-    #     return schedule
+        return schedule
 
-    # def get_schedule_including_deleted(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    # ) -> Schedule | None:
-    #     """根據 ID 查詢單一時段，包含已軟刪除的記錄。"""
-    #     query = db.query(Schedule).options(*self.get_schedule_query_options())
+    def get_schedule_including_deleted(
+        self,
+        db: Session,
+        schedule_id: int,
+    ) -> Schedule | None:
+        """根據 ID 查詢單一時段，包含已軟刪除的記錄。"""
+        query = db.query(Schedule).options(*self.get_schedule_query_options())
 
-    #     query = self._apply_filters(query, include_deleted=True).filter(
-    #         Schedule.id == schedule_id
-    #     )
+        query = self._apply_filters(query, include_deleted=True).filter(
+            Schedule.id == schedule_id
+        )
 
-    #     schedule = query.first()
+        schedule = query.first()
 
-    #     return schedule
+        return schedule
 
     # def _update_schedule_fields(
     #     self,

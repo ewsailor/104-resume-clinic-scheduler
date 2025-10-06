@@ -20,12 +20,12 @@ from app.decorators import (
 )
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
 from app.enums.operations import OperationContext  # , DeletionResult
-from app.errors import (  # # create_schedule_cannot_be_deleted_error,; # create_schedule_not_found_error,
+from app.errors import (  # # create_schedule_cannot_be_deleted_error,
     create_business_logic_error,
+    create_schedule_not_found_error,
     create_schedule_overlap_error,
 )
-
-# from app.errors.exceptions import ScheduleNotFoundError
+from app.errors.exceptions import ScheduleNotFoundError
 from app.models.schedule import Schedule
 from app.schemas import ScheduleBase
 
@@ -259,28 +259,28 @@ class ScheduleService:
 
         return schedules
 
-    # @handle_service_errors_sync("查詢單一時段")
-    # @log_operation("查詢單一時段")
-    # def get_schedule(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    # ) -> Schedule:
-    #     """根據 ID 查詢單一時段。"""
-    #     # 呼叫 CRUD 層查詢指定 ID 的時段
-    #     schedule = self.schedule_crud.get_schedule(db, schedule_id)
+    @handle_service_errors_sync("查詢單一時段")
+    @log_operation("查詢單一時段")
+    def get_schedule(
+        self,
+        db: Session,
+        schedule_id: int,
+    ) -> Schedule:
+        """根據 ID 查詢單一時段。"""
+        # 呼叫 CRUD 層查詢指定 ID 的時段
+        schedule = self.schedule_crud.get_schedule(db, schedule_id)
 
-    #     # 檢查時段是否存在
-    #     if schedule is None:
-    #         raise ScheduleNotFoundError(schedule_id)
+        # 檢查時段是否存在
+        if schedule is None:
+            raise ScheduleNotFoundError(schedule_id)
 
-    #     logger.info(
-    #         f"查詢時段完成: schedule_id={schedule_id}, "
-    #         f"giver_id={schedule.giver_id}, taker_id={schedule.taker_id}, "
-    #         f"status={schedule.status.value}, date={schedule.date}"
-    #     )
+        logger.info(
+            f"查詢時段完成: schedule_id={schedule_id}, "
+            f"giver_id={schedule.giver_id}, taker_id={schedule.taker_id}, "
+            f"status={schedule.status.value}, date={schedule.date}"
+        )
 
-    #     return schedule
+        return schedule
 
     # def new_updated_time_values(
     #     self,
