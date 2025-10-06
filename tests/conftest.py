@@ -7,6 +7,19 @@
 # ===== 第三方套件 =====
 import pytest
 
+# 匯入整合測試的 fixtures
+from tests.fixtures.integration.database import (  # noqa: F401
+    integration_db_override,
+    integration_db_session,
+    integration_test_client,
+)
+from tests.fixtures.integration.schedule import (  # noqa: F401
+    schedule_create_payload,
+    schedule_delete_payload,
+    schedule_in_db,
+    schedule_update_payload,
+)
+
 # ===== 本地模組 =====
 # 匯入單元測試的 fixtures
 from tests.fixtures.unit.database import (  # noqa: F401
@@ -21,19 +34,6 @@ from tests.fixtures.unit.schedules import (  # noqa: F401
 from tests.fixtures.unit.user import (  # noqa: F401
     test_user_data,
 )
-
-# # 匯入整合測試的 fixtures
-# from tests.fixtures.integration.database import (  # noqa: F401
-#     integration_db_override,
-#     integration_db_session,
-#     integration_test_client,
-# )
-# from tests.fixtures.integration.schedule import (  # noqa: F401
-#     schedule_create_payload,
-#     schedule_delete_payload,
-#     schedule_in_db,
-#     schedule_update_payload,
-# )
 
 # 確保 pytest-mock 可用
 pytest_plugins = ["pytest_mock"]

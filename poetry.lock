@@ -772,7 +772,7 @@ version = "1.5.5"
 description = "Let your Python tests travel through time"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "freezegun-1.5.5-py3-none-any.whl", hash = "sha256:cd557f4a75cf074e84bc374249b9dd491eaeacd61376b9eb3c423282211619d2"},
     {file = "freezegun-1.5.5.tar.gz", hash = "sha256:ac7742a6cc6c25a2c35e9292dfd554b897b517d2dec26891a2e8debf205cb94a"},
@@ -2917,4 +2917,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "ee81eb85cff16c1fd062077e476261b8b4ec17a05ea22939cc730900fee717d8"
+content-hash = "fca9a745ded8d921f20db1eef1bad58ce412c39566cde66c3df9fb439d296c73"
