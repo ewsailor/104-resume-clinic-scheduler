@@ -20,8 +20,11 @@ from app.decorators import (
     log_operation,
 )
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
-from app.enums.operations import OperationContext
+from app.enums.operations import DeletionResult, OperationContext
 from app.errors import (
+    create_business_logic_error,
+    create_schedule_cannot_be_deleted_error,
+    create_schedule_not_found_error,
     create_schedule_overlap_error,
 )
 from app.errors.exceptions import ScheduleNotFoundError
@@ -371,66 +374,66 @@ class ScheduleService:
 
         return updated_schedule
 
-    # @handle_service_errors_sync("軟刪除時段")
-    # @log_operation("軟刪除時段")
-    # def delete_schedule(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    #     deleted_by: int | None = None,
-    #     deleted_by_role: UserRoleEnum | None = None,
-    # ) -> bool:
-    #     """軟刪除時段。"""
-    #     # 呼叫 CRUD 層進行軟刪除操作，取得刪除結果
-    #     deletion_result = self.schedule_crud.delete_schedule(
-    #         db, schedule_id, deleted_by, deleted_by_role
-    #     )
+    @handle_service_errors_sync("軟刪除時段")
+    @log_operation("軟刪除時段")
+    def delete_schedule(
+        self,
+        db: Session,
+        schedule_id: int,
+        deleted_by: int | None = None,
+        deleted_by_role: UserRoleEnum | None = None,
+    ) -> bool:
+        """軟刪除時段。"""
+        # 呼叫 CRUD 層進行軟刪除操作，取得刪除結果
+        deletion_result = self.schedule_crud.delete_schedule(
+            db, schedule_id, deleted_by, deleted_by_role
+        )
 
-    #     # 使用 match-case 語法處理不同的刪除結果
-    #     match deletion_result:
-    #         case DeletionResult.SUCCESS:
-    #             # 刪除成功：記錄成功日誌並返回 True
-    #             logger.info(
-    #                 f"時段 {schedule_id} 軟刪除成功, "
-    #                 f"deleted_by={deleted_by}, role={deleted_by_role}"
-    #             )
-    #             return True
-    #         case DeletionResult.NOT_FOUND:
-    #             # 時段不存在：記錄警告並拋出錯誤
-    #             logger.warning(f"時段 {schedule_id} 不存在")
-    #             raise create_schedule_not_found_error(schedule_id)
-    #         case DeletionResult.CANNOT_DELETE:
-    #             # 無法刪除：時段狀態為 ACCEPTED 或 COMPLETED 不允許刪除
-    #             schedule = self.schedule_crud.get_schedule_including_deleted(
-    #                 db, schedule_id
-    #             )
+        # 使用 match-case 語法處理不同的刪除結果
+        match deletion_result:
+            case DeletionResult.SUCCESS:
+                # 刪除成功：記錄成功日誌並返回 True
+                logger.info(
+                    f"時段 {schedule_id} 軟刪除成功, "
+                    f"deleted_by={deleted_by}, role={deleted_by_role}"
+                )
+                return True
+            case DeletionResult.NOT_FOUND:
+                # 時段不存在：記錄警告並拋出錯誤
+                logger.warning(f"時段 {schedule_id} 不存在")
+                raise create_schedule_not_found_error(schedule_id)
+            case DeletionResult.CANNOT_DELETE:
+                # 無法刪除：時段狀態為 ACCEPTED 或 COMPLETED 不允許刪除
+                schedule = self.schedule_crud.get_schedule_including_deleted(
+                    db, schedule_id
+                )
 
-    #             # 如果時段不存在或狀態為 None，則標記為 UNKNOWN，避免 None 值造成的錯誤
-    #             schedule_status = (
-    #                 schedule.status.value if schedule and schedule.status else "UNKNOWN"
-    #             )
+                # 取得時段狀態（確保 schedule 存在）
+                if not schedule:
+                    raise create_schedule_not_found_error(schedule_id)
+                schedule_status = schedule.status.value
 
-    #             # 記錄無法刪除的警告，包含時段 ID 和當前狀態
-    #             logger.warning(
-    #                 f"時段 {schedule_id} 無法刪除，狀態不允許，當前狀態: {schedule_status}"
-    #             )
+                # 記錄無法刪除的警告，包含時段 ID 和當前狀態
+                logger.warning(
+                    f"時段 {schedule_id} 無法刪除，狀態不允許，當前狀態: {schedule_status}"
+                )
 
-    #             # 拋出業務邏輯錯誤，包含時段 ID、刪除原因和當前狀態，幫助使用者理解為什麼無法刪除
-    #             raise create_schedule_cannot_be_deleted_error(
-    #                 schedule_id,
-    #                 reason="狀態不允許刪除",
-    #                 schedule_status=schedule_status,
-    #             )
-    #         case DeletionResult.ALREADY_DELETED:
-    #             # 已經刪除：記錄警告
-    #             logger.warning(f"時段 {schedule_id} 已經刪除")
-    #             raise create_schedule_not_found_error(schedule_id)
-    #         case _:  # 防禦性程式設計：處理未預期的刪除結果
-    #             # 未知錯誤：記錄錯誤並拋出業務邏輯錯誤
-    #             logger.error(
-    #                 f"時段 {schedule_id} 刪除時發生未知錯誤: {deletion_result}"
-    #             )
-    #             raise create_business_logic_error(f"未知的刪除結果: {deletion_result}")
+                # 拋出業務邏輯錯誤，包含時段 ID、刪除原因和當前狀態，幫助使用者理解為什麼無法刪除
+                raise create_schedule_cannot_be_deleted_error(
+                    schedule_id,
+                    reason="狀態不允許刪除",
+                    schedule_status=schedule_status,
+                )
+            case DeletionResult.ALREADY_DELETED:
+                # 已經刪除：記錄警告
+                logger.warning(f"時段 {schedule_id} 已經刪除")
+                raise create_schedule_not_found_error(schedule_id)
+            case _:  # 防禦性程式設計：處理未預期的刪除結果
+                # 未知錯誤：記錄錯誤並拋出業務邏輯錯誤
+                logger.error(
+                    f"時段 {schedule_id} 刪除時發生未知錯誤: {deletion_result}"
+                )
+                raise create_business_logic_error(f"未知的刪除結果: {deletion_result}")
 
 
 # 建立服務實例，供其他模組使用

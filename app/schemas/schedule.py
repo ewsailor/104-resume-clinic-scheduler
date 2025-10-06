@@ -169,15 +169,15 @@ class SchedulePartialUpdateRequest(BaseModel):
     )
 
 
-# class ScheduleDeleteRequest(BaseModel):
-#     """刪除時段的 API 請求模型。"""
+class ScheduleDeleteRequest(BaseModel):
+    """刪除時段的 API 請求模型。"""
 
-#     deleted_by: int = Field(
-#         ..., description="刪除者的 ID", gt=0, json_schema_extra={"example": 1}
-#     )
-#     deleted_by_role: UserRoleEnum = Field(
-#         ..., description="刪除者角色", json_schema_extra={"example": UserRoleEnum.TAKER}
-#     )
+    deleted_by: int = Field(
+        ..., description="刪除者的 ID", gt=0, json_schema_extra={"example": 1}
+    )
+    deleted_by_role: UserRoleEnum = Field(
+        ..., description="刪除者角色", json_schema_extra={"example": UserRoleEnum.TAKER}
+    )
 
 
 # ===== 回應模型 =====

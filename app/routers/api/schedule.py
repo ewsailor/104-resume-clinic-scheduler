@@ -12,8 +12,9 @@ from app.database import get_db
 from app.decorators import handle_api_errors_async
 from app.enums.models import ScheduleStatusEnum
 from app.errors import create_bad_request_error
-from app.schemas import (  # ScheduleDeleteRequest,
+from app.schemas import (
     ScheduleCreateRequest,
+    ScheduleDeleteRequest,
     SchedulePartialUpdateRequest,
     ScheduleResponse,
 )
@@ -533,108 +534,108 @@ async def update_schedule(
     return ScheduleResponse.model_validate(schedule)
 
 
-# @router.delete(
-#     "/schedules/{schedule_id}",
-#     status_code=status.HTTP_204_NO_CONTENT,
-#     summary="刪除時段",
-#     description="""
-# ## 功能簡介
-# - 軟刪除指定的時段記錄
+@router.delete(
+    "/schedules/{schedule_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="刪除時段",
+    description="""
+## 功能簡介
+- 軟刪除指定的時段記錄
 
-# ### 使用場景
-# - Giver 刪除不再方便提供的時間
-# - Taker 刪除不再方便提供的時間
-# - 系統管理員清理無效時段
-# - 批量清理過期時段
+### 使用場景
+- Giver 刪除不再方便提供的時間
+- Taker 刪除不再方便提供的時間
+- 系統管理員清理無效時段
+- 批量清理過期時段
 
-# ### 路徑參數
-# - **schedule_id**: 時段 ID（必填，必須大於 0）
+### 路徑參數
+- **schedule_id**: 時段 ID（必填，必須大於 0）
 
-# ### 回應狀態
-# - **204 No Content**: 成功刪除時段
-# - **404 Not Found**: 時段不存在錯誤
-# - **409 Conflict**: 時段無法刪除錯誤
-# - **422 Unprocessable Entity**: 參數驗證錯誤
-#     """,
-#     responses={
-#         204: {
-#             "description": "成功刪除時段",
-#         },
-#         404: {
-#             "description": "時段不存在錯誤（Service 拋出錯誤，由 Route 捕捉）",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "error": {
-#                             "message": "時段不存在: ID=schedule_id",
-#                             "status_code": 404,
-#                             "code": "SERVICE_SCHEDULE_NOT_FOUND",
-#                             "timestamp": "2024-01-01T00:00:00Z",
-#                             "details": {},
-#                         }
-#                     }
-#                 }
-#             },
-#         },
-#         409: {
-#             "description": "時段無法刪除錯誤（Service 拋出錯誤，由 Route 捕捉）",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "error": {
-#                             "message": "時段無法刪除: ID=schedule_id",
-#                             "status_code": 409,
-#                             "code": "SERVICE_SCHEDULE_CANNOT_BE_DELETED",
-#                             "timestamp": "2024-01-01T00:00:00Z",
-#                             "details": {
-#                                 "reason": "狀態不允許刪除",
-#                                 "current_status": "ACCEPTED",
-#                                 "explanation": "已接受的時段無法刪除，因為雙方已確認面談時間，刪除會影響約定",
-#                             },
-#                         }
-#                     }
-#                 }
-#             },
-#         },
-#         422: {
-#             "description": "參數驗證錯誤",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "detail": [
-#                             {
-#                                 "type": "validation_error_type",
-#                                 "loc": ["path", "to", "field"],
-#                                 "msg": "具體錯誤訊息",
-#                                 "input": "無效的輸入值",
-#                                 "ctx": {"error": "錯誤上下文"},
-#                             }
-#                         ]
-#                     }
-#                 }
-#             },
-#         },
-#     },
-# )
-# @handle_api_errors_async()
-# async def delete_schedule(
-#     request: ScheduleDeleteRequest,
-#     schedule_id: int = Path(..., gt=0, description="時段 ID，必填，必須大於 0"),
-#     db: Session = Depends(get_db),
-# ) -> None:
-#     """刪除時段：刪除指定的時段記錄。
+### 回應狀態
+- **204 No Content**: 成功刪除時段
+- **404 Not Found**: 時段不存在錯誤
+- **409 Conflict**: 時段無法刪除錯誤
+- **422 Unprocessable Entity**: 參數驗證錯誤
+    """,
+    responses={
+        204: {
+            "description": "成功刪除時段",
+        },
+        404: {
+            "description": "時段不存在錯誤（Service 拋出錯誤，由 Route 捕捉）",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "message": "時段不存在: ID=schedule_id",
+                            "status_code": 404,
+                            "code": "SERVICE_SCHEDULE_NOT_FOUND",
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "details": {},
+                        }
+                    }
+                }
+            },
+        },
+        409: {
+            "description": "時段無法刪除錯誤（Service 拋出錯誤，由 Route 捕捉）",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "message": "時段無法刪除: ID=schedule_id",
+                            "status_code": 409,
+                            "code": "SERVICE_SCHEDULE_CANNOT_BE_DELETED",
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "details": {
+                                "reason": "狀態不允許刪除",
+                                "current_status": "ACCEPTED",
+                                "explanation": "已接受的時段無法刪除，因為雙方已確認面談時間，刪除會影響約定",
+                            },
+                        }
+                    }
+                }
+            },
+        },
+        422: {
+            "description": "參數驗證錯誤",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "type": "validation_error_type",
+                                "loc": ["path", "to", "field"],
+                                "msg": "具體錯誤訊息",
+                                "input": "無效的輸入值",
+                                "ctx": {"error": "錯誤上下文"},
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+    },
+)
+@handle_api_errors_async()
+async def delete_schedule(
+    request: ScheduleDeleteRequest,
+    schedule_id: int = Path(..., gt=0, description="時段 ID，必填，必須大於 0"),
+    db: Session = Depends(get_db),
+) -> None:
+    """刪除時段：刪除指定的時段記錄。
 
-#     Args:
-#         request (ScheduleDeleteRequest): 刪除請求資料。
-#         schedule_id (int): 時段 ID，必填，必須大於 0。
-#         db (Session): 資料庫會話。
+    Args:
+        request (ScheduleDeleteRequest): 刪除請求資料。
+        schedule_id (int): 時段 ID，必填，必須大於 0。
+        db (Session): 資料庫會話。
 
-#     Returns:
-#         None: 刪除成功無回傳內容。
-#     """
-#     schedule_service.delete_schedule(
-#         db,
-#         schedule_id,
-#         deleted_by=request.deleted_by,
-#         deleted_by_role=request.deleted_by_role,
-#     )
+    Returns:
+        None: 刪除成功無回傳內容。
+    """
+    schedule_service.delete_schedule(
+        db,
+        schedule_id,
+        deleted_by=request.deleted_by,
+        deleted_by_role=request.deleted_by_role,
+    )

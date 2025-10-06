@@ -10,9 +10,10 @@
 """
 
 # ===== 本地模組 =====
-from .schedule import (  # ScheduleDeleteRequest,
+from .schedule import (
     ScheduleBase,
     ScheduleCreateRequest,
+    ScheduleDeleteRequest,
     SchedulePartialUpdateRequest,
     ScheduleResponse,
     ScheduleUpdateBase,
@@ -24,6 +25,6 @@ __all__ = [
     "ScheduleCreateRequest",
     "ScheduleUpdateBase",
     "SchedulePartialUpdateRequest",
-    # "ScheduleDeleteRequest",
+    "ScheduleDeleteRequest",
     "ScheduleResponse",
 ]
