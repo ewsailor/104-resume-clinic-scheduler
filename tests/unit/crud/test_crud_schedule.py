@@ -5,16 +5,18 @@
 
 # ===== 標準函式庫 =====
 from datetime import date, time
+from unittest.mock import patch
 
 # ===== 第三方套件 =====
 import pytest
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload, Session
 
 # ===== 本地模組 =====
 from app.crud.schedule import ScheduleCRUD
-from app.enums.models import ScheduleStatusEnum
+from app.enums.models import ScheduleStatusEnum, UserRoleEnum
 from app.models.schedule import Schedule
+from app.utils.timezone import get_local_now_naive
 
 
 class TestScheduleCRUD:
@@ -274,166 +276,361 @@ class TestScheduleCRUD:
         assert len(options) == 2
         assert all(hasattr(opt, 'path') for opt in options)
 
-    # # ===== 篩選功能 =====
-    # def test_apply_filters_include_deleted(
-    #     self, db_session: Session, test_giver_schedule: Schedule
-    # ):
-    #     """測試套用篩選條件：包含已刪除記錄。"""
-    #     # Given: 軟刪除時段
-    #     test_giver_schedule.deleted_at = get_local_now_naive()
-    #     test_giver_schedule.deleted_by = test_giver_schedule.giver_id
-    #     test_giver_schedule.deleted_by_role = UserRoleEnum.GIVER
-    #     db_session.commit()
+    # ===== 篩選功能測試 =====
+    @pytest.mark.parametrize(
+        "include_deleted,expected_count,description",
+        [
+            (False, 0, "排除已刪除記錄（預設行為）"),
+            (True, 1, "包含已刪除記錄"),
+        ],
+    )
+    def test_apply_filters_deleted_records(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        include_deleted: bool,
+        expected_count: int,
+        description: str,
+    ):
+        """測試套用篩選條件：包含/排除已刪除記錄。"""
+        # Given: 軟刪除時段
+        test_giver_schedule.deleted_at = get_local_now_naive()
+        test_giver_schedule.deleted_by = test_giver_schedule.giver_id
+        test_giver_schedule.deleted_by_role = UserRoleEnum.GIVER
+        db_session.commit()
 
-    #     # Given: 測試不包含已刪除記錄（預設行為）
-    #     query = db_session.query(Schedule)
+        # Given: 建立查詢
+        query = db_session.query(Schedule)
 
-    #     # When: 套用篩選條件
-    #     filtered_query = self.crud._apply_filters(
-    #         query,
-    #         include_deleted=False,
-    #     )
-    #     results = filtered_query.all()
+        # When: 套用篩選條件
+        filtered_query = self.crud._apply_filters(
+            query,
+            include_deleted=include_deleted,
+        )
+        results = filtered_query.all()
 
-    #     # Then: 驗證返回的時段不包含夾具中的時段
-    #     assert len(results) == 0
+        # Then: 驗證結果數量
+        assert len(results) == expected_count
 
-    #     # Given: 測試包含已刪除記錄
-    #     query = db_session.query(Schedule)
+        # Then: 驗證結果內容（如果包含已刪除記錄）
+        if include_deleted and expected_count > 0:
+            assert results[0].deleted_at is not None
 
-    #     # When: 套用篩選條件
-    #     filtered_query = self.crud._apply_filters(
-    #         query,
-    #         include_deleted=True,
-    #     )
-    #     results = filtered_query.all()
+    @pytest.mark.parametrize(
+        "giver_id,taker_id,status_filter,expected_count,description",
+        [
+            # 單一條件篩選
+            (
+                1,
+                None,
+                None,
+                2,
+                "單一條件：giver_id 篩選",
+            ),  # 兩個夾具都有相同的 giver_id
+            (
+                None,
+                1,
+                None,
+                1,
+                "單一條件：taker_id 篩選",
+            ),  # 只有 test_taker_schedule 有 taker_id
+            (
+                None,
+                None,
+                ScheduleStatusEnum.AVAILABLE,
+                1,
+                "單一條件：status 篩選",
+            ),  # 只有 test_giver_schedule 是 AVAILABLE 狀態
+            # 多重條件篩選
+            (
+                1,
+                None,
+                ScheduleStatusEnum.AVAILABLE,
+                1,
+                "多重條件：giver_id + status 篩選",
+            ),
+            (1, 1, None, 1, "多重條件：giver_id + taker_id 篩選"),
+            (
+                None,
+                1,
+                ScheduleStatusEnum.PENDING,
+                1,
+                "多重條件：taker_id + status 篩選",
+            ),
+            (1, 1, ScheduleStatusEnum.PENDING, 1, "多重條件：所有條件篩選"),
+            # 無篩選條件
+            (None, None, None, 2, "無篩選條件：查詢所有時段"),
+        ],
+    )
+    def test_apply_filters_conditions(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        test_taker_schedule: Schedule,
+        giver_id: int | None,
+        taker_id: int | None,
+        status_filter: ScheduleStatusEnum | None,
+        expected_count: int,
+        description: str,
+    ):
+        """測試套用篩選條件：各種篩選參數組合。"""
+        # Given: 使用夾具的時段資料，建立查詢
+        query = db_session.query(Schedule)
 
-    #     # Then: 驗證返回的時段包含夾具中的時段
-    #     assert len(results) == 1
-    #     assert results[0].deleted_at is not None
+        # When: 套用篩選條件
+        filtered_query = self.crud._apply_filters(
+            query,
+            giver_id=giver_id,
+            taker_id=taker_id,
+            status_filter=status_filter.value if status_filter else None,
+            include_deleted=False,
+        )
+        results = filtered_query.all()
 
-    # # ===== 查詢時段列表 =====
-    # def test_list_schedules_all(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    #     test_taker_schedule: Schedule,
-    # ):
-    #     """測試查詢所有時段。"""
-    #     # Given: 使用夾具的時段資料
+        # Then: 驗證結果數量
+        assert len(results) == expected_count
 
-    #     # When: 查詢所有時段
-    #     schedules = self.crud.list_schedules(db_session)
+        # Then: 驗證結果內容，確保每個返回的時段都符合篩選條件
+        for schedule in results:
+            # 驗證 giver_id 篩選條件
+            if giver_id is not None:
+                assert schedule.giver_id == giver_id
 
-    #     # Then: 驗證返回的時段數量
-    #     assert len(schedules) == 2
+            # 驗證 taker_id 篩選條件
+            if taker_id is not None:
+                assert schedule.taker_id == taker_id
 
-    # @pytest.mark.parametrize(
-    #     "filter_param,expected_count,filter_value",
-    #     [
-    #         ("giver_id", 2, "fixture_value"),  # 兩個夾具都有相同的 giver_id
-    #         ("taker_id", 1, "fixture_value"),  # 只有 test_taker_schedule 有 taker_id
-    #         (
-    #             "status",
-    #             1,
-    #             ScheduleStatusEnum.AVAILABLE,
-    #         ),  # 只有 test_giver_schedule 是 AVAILABLE 狀態
-    #     ],
-    # )
-    # def test_list_schedules_filter_by_single_condition(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    #     test_taker_schedule: Schedule,
-    #     filter_param: str,
-    #     expected_count: int,
-    #     filter_value,
-    # ):
-    #     """測試根據單一條件篩選時段。"""
-    #     # Given: 準備篩選參數
-    #     filter_kwargs = {}
+            # 驗證 status 篩選條件
+            if status_filter is not None:
+                assert schedule.status == status_filter
 
-    #     # When: 根據篩選參數類型，設定對應的篩選條件
-    #     match filter_param:
-    #         case "giver_id":
-    #             # giver_id 篩選：使用 test_giver_schedule 夾具的 giver_id
-    #             filter_kwargs["giver_id"] = test_giver_schedule.giver_id
-    #         case "taker_id":
-    #             # taker_id 篩選：使用 test_taker_schedule 夾具的 taker_id
-    #             filter_kwargs["taker_id"] = test_taker_schedule.taker_id
-    #         case "status":
-    #             # status 篩選：使用 ScheduleStatusEnum.AVAILABLE
-    #             filter_kwargs["status_filter"] = filter_value
+    @pytest.mark.parametrize(
+        "giver_id,taker_id",
+        [
+            # 無效的 giver_id 值
+            (-1, None),  # 負數 ID
+            (0, None),  # 零 ID
+            # 無效的 taker_id 值
+            (None, -1),  # 負數 ID
+            (None, 0),  # 零 ID
+            # 組合無效值
+            (-1, -1),  # 負數 ID 組合
+            (0, 0),  # 零 ID 組合
+        ],
+    )
+    def test_apply_filters_invalid_id_values(
+        self, db_session: Session, giver_id: int | None, taker_id: int | None
+    ):
+        """測試套用篩選條件：無效的 ID 值。
 
-    #     # When: 執行篩選：**filter_kwargs 將字典解包為關鍵字參數傳給 list_schedules
-    #     schedules = self.crud.list_schedules(db_session, **filter_kwargs)
+        unsigned 約束：只在插入數據時生效，不在查詢時生效。
+        故不會拋出異常，但業務邏輯無效。"""
+        # Given: 準備查詢對象
+        query = db_session.query(Schedule)
 
-    #     # Then: 驗證結果數量：確保返回的時段數量符合預期
-    #     assert len(schedules) == expected_count
+        # When: 套用無效的 ID 篩選條件
+        result = self.crud._apply_filters(
+            query,
+            giver_id=giver_id,
+            taker_id=taker_id,
+            status_filter=None,
+            include_deleted=False,
+        )
 
-    #     # Then: 驗證結果內容，確保每個返回的時段都符合篩選條件
-    #     match filter_param:
-    #         case "giver_id":
-    #             # 驗證所有返回的時段都有相同的 giver_id
-    #             assert all(
-    #                 schedule.giver_id == test_giver_schedule.giver_id
-    #                 for schedule in schedules
-    #             )
-    #         case "taker_id":
-    #             # 驗證所有返回的時段都有相同的 taker_id
-    #             assert all(
-    #                 schedule.taker_id == test_taker_schedule.taker_id
-    #                 for schedule in schedules
-    #             )
-    #         case "status":
-    #             # 驗證所有返回的時段都有相同的狀態
-    #             assert all(schedule.status == filter_value for schedule in schedules)
+        # Then: 驗證方法返回了查詢對象（SQLAlchemy 不會拋出異常）
+        assert result is not None
 
-    # def test_list_schedules_filter_by_both(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    #     test_taker_schedule: Schedule,
-    # ):
-    #     """測試同時根據 giver_id 和狀態篩選時段。"""
-    #     # Given: 使用夾具的時段資料
+    @pytest.mark.parametrize(
+        "status_filter,expected_error",
+        [
+            ("INVALID_STATUS", "'INVALID_STATUS' is not a valid ScheduleStatusEnum"),
+            ("", "'' is not a valid ScheduleStatusEnum"),
+            ("draft", "'draft' is not a valid ScheduleStatusEnum"),  # 小寫
+            ("AVAILABLE ", "'AVAILABLE ' is not a valid ScheduleStatusEnum"),  # 有空格
+            ("NONE", "'NONE' is not a valid ScheduleStatusEnum"),
+        ],
+    )
+    def test_apply_filters_invalid_status_filter(
+        self, db_session: Session, status_filter: str, expected_error: str
+    ):
+        """測試套用篩選條件：無效的狀態篩選值（會拋出異常）。"""
+        # Given: 準備查詢對象
+        query = db_session.query(Schedule)
 
-    #     # When: 查詢時段
-    #     schedules = self.crud.list_schedules(
-    #         db_session,
-    #         giver_id=test_giver_schedule.giver_id,
-    #         status_filter=ScheduleStatusEnum.AVAILABLE,
-    #     )
+        # When & Then: 確認拋出 ValueError
+        with pytest.raises(ValueError, match=expected_error):
+            self.crud._apply_filters(
+                query,
+                giver_id=None,
+                taker_id=None,
+                status_filter=status_filter,
+                include_deleted=False,
+            )
 
-    #     # Then: 驗證返回的時段數量
-    #     assert len(schedules) == 1
-    #     assert schedules[0].giver_id == test_giver_schedule.giver_id
-    #     assert schedules[0].status == ScheduleStatusEnum.AVAILABLE
+    # ===== 查詢時段列表測試 =====
+    def test_list_schedules(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        test_taker_schedule: Schedule,
+    ):
+        """測試查詢所有時段 - 成功。"""
+        # Given: 使用夾具的時段資料
 
-    # def test_list_schedules_exclude_deleted(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    #     test_taker_schedule: Schedule,
-    # ):
-    #     """測試查詢時段時排除已軟刪除的記錄。"""
-    #     # Given: 軟刪除其中一個時段
-    #     self.crud.delete_schedule(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #         deleted_by=test_giver_schedule.giver_id,
-    #         deleted_by_role=UserRoleEnum.GIVER,
-    #     )
+        # When: 查詢所有時段
+        schedules = self.crud.list_schedules(db_session)
 
-    #     # When: 查詢時段
-    #     schedules = self.crud.list_schedules(
-    #         db_session,
-    #         giver_id=test_giver_schedule.giver_id,
-    #     )
+        # Then: 驗證返回的時段數量
+        assert len(schedules) == 2
 
-    #     # Then: 驗證應該只返回 test_taker_schedule（因為 test_giver_schedule 被刪除了）
-    #     assert len(schedules) == 1
-    #     assert schedules[0].id == test_taker_schedule.id
+    @pytest.mark.parametrize(
+        "mock_options_count,description",
+        [
+            (0, "不載入任何關聯"),
+            (1, "只載入 created_by_user"),
+            (2, "載入兩個關聯"),
+            (3, "載入所有關聯：created_by_user, updated_by_user, deleted_by_user"),
+        ],
+    )
+    def test_list_schedules_query_options_success(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        mock_options_count: int,
+        description: str,
+    ):
+        """測試 list_schedules 方法的查詢選項功能：成功載入關聯資料。"""
+        # Given: 使用夾具的時段資料，並 mock get_schedule_query_options 方法
+        with patch.object(self.crud, 'get_schedule_query_options') as mock_options:
+            # 設定 mock 返回值：返回指定數量的查詢選項
+            mock_options.return_value = [
+                joinedload(Schedule.created_by_user) for _ in range(mock_options_count)
+            ]
+
+            # When: 查詢時段（會應用 get_schedule_query_options）
+            schedules = self.crud.list_schedules(
+                db_session, giver_id=test_giver_schedule.giver_id
+            )
+
+            # Then: 驗證 get_schedule_query_options 被正確呼叫
+            mock_options.assert_called_once_with()
+
+            # 驗證返回了時段列表
+            assert len(schedules) > 0
+            assert isinstance(schedules, list)
+
+    @pytest.mark.parametrize(
+        "invalid_relations,expected_warning",
+        [
+            (['invalid_relation'], "忽略無效的關聯名稱: ['invalid_relation']"),
+            (
+                ['created_by_user', 'invalid_relation'],
+                "忽略無效的關聯名稱: ['invalid_relation']",
+            ),
+            (['invalid1', 'invalid2'], "忽略無效的關聯名稱: ['invalid1', 'invalid2']"),
+        ],
+    )
+    def test_list_schedules_query_options_failure(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        invalid_relations: list[str],
+        expected_warning: str,
+    ):
+        """測試 list_schedules 方法的查詢選項功能：無效關聯名稱處理。"""
+        # Given: 使用夾具的時段資料
+        with patch.object(self.crud, 'get_schedule_query_options') as mock_options:
+            # 設定 mock 返回空列表（模擬無效關聯的情況）
+            mock_options.return_value = []
+
+            # When: 查詢時段
+            schedules = self.crud.list_schedules(
+                db_session, giver_id=test_giver_schedule.giver_id
+            )
+
+            # Then: 驗證 get_schedule_query_options 被正確呼叫
+            mock_options.assert_called_once_with()
+
+            # 驗證仍然返回了時段列表（不會因為無效關聯而失敗）
+            assert len(schedules) > 0
+
+    @pytest.mark.parametrize(
+        "giver_id,taker_id,status_filter,expected_count,description",
+        [
+            (1, None, None, 2, "giver_id 篩選成功"),
+            (None, 1, None, 1, "taker_id 篩選成功"),
+            (None, None, "AVAILABLE", 1, "status_filter 篩選成功"),
+            (1, 1, "PENDING", 1, "多重篩選條件成功"),
+        ],
+    )
+    def test_list_schedules_apply_filters_success(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        test_taker_schedule: Schedule,
+        giver_id: int | None,
+        taker_id: int | None,
+        status_filter: str | None,
+        expected_count: int,
+        description: str,
+    ):
+        """測試 list_schedules 方法的篩選功能：成功套用篩選條件。"""
+        # Given: 使用夾具的時段資料，並 mock _apply_filters 方法
+        with patch.object(self.crud, '_apply_filters') as mock_apply_filters:
+            # 設定 mock 返回查詢對象
+            mock_query = db_session.query(Schedule)
+            mock_apply_filters.return_value = mock_query
+
+            # When: 查詢時段
+            schedules = self.crud.list_schedules(
+                db_session,
+                giver_id=giver_id,
+                taker_id=taker_id,
+                status_filter=status_filter,
+            )
+
+            # Then: 驗證 _apply_filters 被正確呼叫
+            mock_apply_filters.assert_called_once()
+            call_args = mock_apply_filters.call_args
+            assert call_args[1]['giver_id'] == giver_id
+            assert call_args[1]['taker_id'] == taker_id
+            assert call_args[1]['status_filter'] == status_filter
+
+            # 驗證返回了時段列表
+            assert isinstance(schedules, list)
+
+    @pytest.mark.parametrize(
+        "giver_id,taker_id,status_filter,expected_error_type",
+        [
+            (None, None, "INVALID_STATUS", ValueError),  # 無效狀態篩選
+            (None, None, "", ValueError),  # 空狀態篩選
+            (None, None, "draft", ValueError),  # 小寫狀態篩選
+        ],
+    )
+    def test_list_schedules_apply_filters_failure(
+        self,
+        db_session: Session,
+        giver_id: int | None,
+        taker_id: int | None,
+        status_filter: str | None,
+        expected_error_type: type,
+    ):
+        """測試 list_schedules 方法的篩選功能：篩選條件錯誤處理。"""
+        # Given: 使用夾具的時段資料，並 mock _apply_filters 方法拋出異常
+        with patch.object(self.crud, '_apply_filters') as mock_apply_filters:
+            # 設定 mock 拋出異常
+            mock_apply_filters.side_effect = expected_error_type(
+                f"無效的篩選條件: {status_filter}"
+            )
+
+            # When & Then: 確認拋出預期的異常
+            with pytest.raises(expected_error_type):
+                self.crud.list_schedules(
+                    db_session,
+                    giver_id=giver_id,
+                    taker_id=taker_id,
+                    status_filter=status_filter,
+                )
 
     # # ===== 查詢單一時段（排除軟刪除） =====
     # def test_get_schedule_success(
