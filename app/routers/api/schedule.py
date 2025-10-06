@@ -286,13 +286,13 @@ async def list_schedules(
 - **schedule_id**: 時段 ID（必填，必須大於 0）
 
 ### 回應狀態
-- **200 OK**: 成功取得時段資訊
+- **200 OK**: 成功取得單一時段資訊
 - **404 Not Found**: 時段不存在錯誤
 - **422 Unprocessable Entity**: 參數驗證錯誤
     """,
     responses={
         200: {
-            "description": "成功取得時段資訊",
+            "description": "成功取得單一時段資訊",
             "content": {
                 "application/json": {
                     "example": {
@@ -303,7 +303,7 @@ async def list_schedules(
                         "date": "2024-01-01",
                         "start_time": "09:00:00",
                         "end_time": "10:00:00",
-                        "note": "成功取得時段資訊",
+                        "note": "成功取得單一時段資訊",
                         "created_at": "2024-01-01T00:00:00Z",
                         "created_by": 1,
                         "created_by_role": "TAKER",
@@ -390,7 +390,7 @@ async def get_schedule(
 
 ### 回應狀態
 - **200 OK**: 成功更新時段
-- **400 Bad Request**: 更新資料無效
+- **400 Bad Request**: 時段邏輯錯誤
 - **404 Not Found**: 時段不存在錯誤
 - **409 Conflict**: 時段衝突錯誤
 - **422 Unprocessable Entity**: 參數驗證錯誤
@@ -423,12 +423,12 @@ async def get_schedule(
             },
         },
         400: {
-            "description": "更新資料錯誤",
+            "description": "時段邏輯錯誤",
             "content": {
                 "application/json": {
                     "example": {
                         "error": {
-                            "message": "更新資料錯誤",
+                            "message": "時段邏輯錯誤",
                             "status_code": 400,
                             "code": "ROUTER_BAD_REQUEST",
                             "timestamp": "2024-01-01T00:00:00Z",
