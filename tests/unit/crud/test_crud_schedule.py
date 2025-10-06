@@ -15,6 +15,7 @@ from sqlalchemy.orm import joinedload, Session
 # ===== 本地模組 =====
 from app.crud.schedule import ScheduleCRUD
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
+from app.enums.operations import DeletionResult
 from app.errors.exceptions import BadRequestError, ScheduleNotFoundError
 from app.models.schedule import Schedule
 from app.utils.timezone import get_local_now_naive
@@ -934,169 +935,169 @@ class TestScheduleCRUD:
                 note="測試時段不存在",
             )
 
-    # # ===== 軟刪除時段 =====
-    # def test_delete_schedule_success(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    # ):
-    #     """測試成功軟刪除時段。"""
-    #     # Given: 軟刪除時段
+    # ===== 軟刪除時段 =====
+    def test_delete_schedule_success(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+    ):
+        """測試成功軟刪除時段。"""
+        # Given: 軟刪除時段
 
-    #     # When: 軟刪除時段
-    #     result = self.crud.delete_schedule(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #         deleted_by=test_giver_schedule.giver_id,
-    #         deleted_by_role=UserRoleEnum.GIVER,
-    #     )
+        # When: 軟刪除時段
+        result = self.crud.delete_schedule(
+            db_session,
+            test_giver_schedule.id,
+            deleted_by=test_giver_schedule.giver_id,
+            deleted_by_role=UserRoleEnum.GIVER,
+        )
 
-    #     # Then: 驗證軟刪除結果
-    #     assert result == DeletionResult.SUCCESS
+        # Then: 驗證軟刪除結果
+        assert result == DeletionResult.SUCCESS
 
-    #     # Then: 確認時段仍然存在但已被軟刪除
-    #     found_schedule_with_deleted = self.crud.get_schedule_including_deleted(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #     )
+        # Then: 確認時段仍然存在但已被軟刪除
+        found_schedule_with_deleted = self.crud.get_schedule_including_deleted(
+            db_session,
+            test_giver_schedule.id,
+        )
 
-    #     # Then: 驗證資料完整性
-    #     assert found_schedule_with_deleted.giver_id == test_giver_schedule.giver_id
-    #     assert found_schedule_with_deleted.taker_id == test_giver_schedule.taker_id
-    #     assert found_schedule_with_deleted.date == test_giver_schedule.date
-    #     assert found_schedule_with_deleted.start_time == test_giver_schedule.start_time
-    #     assert found_schedule_with_deleted.end_time == test_giver_schedule.end_time
-    #     assert found_schedule_with_deleted.note == test_giver_schedule.note
+        # Then: 驗證資料完整性
+        assert found_schedule_with_deleted.giver_id == test_giver_schedule.giver_id
+        assert found_schedule_with_deleted.taker_id == test_giver_schedule.taker_id
+        assert found_schedule_with_deleted.date == test_giver_schedule.date
+        assert found_schedule_with_deleted.start_time == test_giver_schedule.start_time
+        assert found_schedule_with_deleted.end_time == test_giver_schedule.end_time
+        assert found_schedule_with_deleted.note == test_giver_schedule.note
 
-    #     # Then: 驗證業務邏輯
-    #     assert found_schedule_with_deleted.deleted_at is not None
-    #     assert found_schedule_with_deleted.id == test_giver_schedule.id
-    #     assert found_schedule_with_deleted.status == ScheduleStatusEnum.CANCELLED
-    #     assert found_schedule_with_deleted.deleted_by == test_giver_schedule.giver_id
-    #     assert found_schedule_with_deleted.deleted_by_role == UserRoleEnum.GIVER
-    #     assert found_schedule_with_deleted.is_active is False
-    #     assert found_schedule_with_deleted.is_deleted is True
+        # Then: 驗證業務邏輯
+        assert found_schedule_with_deleted.deleted_at is not None
+        assert found_schedule_with_deleted.id == test_giver_schedule.id
+        assert found_schedule_with_deleted.status == ScheduleStatusEnum.CANCELLED
+        assert found_schedule_with_deleted.deleted_by == test_giver_schedule.giver_id
+        assert found_schedule_with_deleted.deleted_by_role == UserRoleEnum.GIVER
+        assert found_schedule_with_deleted.is_active is False
+        assert found_schedule_with_deleted.is_deleted is True
 
-    # def test_delete_schedule_already_deleted(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    # ):
-    #     """測試重複軟刪除時段。"""
-    #     # Given: 第一次軟刪除
+    def test_delete_schedule_not_found(self, db_session: Session):
+        """測試刪除時段：404 資源不存在錯誤。"""
+        # Given: 測試刪除不存在的時段
 
-    #     # When: 第一次軟刪除
-    #     result1 = self.crud.delete_schedule(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #         deleted_by=test_giver_schedule.giver_id,
-    #         deleted_by_role=UserRoleEnum.GIVER,
-    #     )
+        # When: 刪除時段
 
-    #     # Then: 驗證軟刪除結果
-    #     assert result1 == DeletionResult.SUCCESS
+        # Then: 應該返回 NOT_FOUND
+        result = self.crud.delete_schedule(
+            db_session,
+            999,
+        )
 
-    #     # Given: 第二次軟刪除（應該返回已經刪除）
+        assert result == DeletionResult.NOT_FOUND
 
-    #     # When: 第二次軟刪除
-    #     result2 = self.crud.delete_schedule(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #         deleted_by=test_giver_schedule.giver_id,
-    #         deleted_by_role=UserRoleEnum.GIVER,
-    #     )
+    def test_delete_schedule_already_deleted(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+    ):
+        """測試重複軟刪除時段。"""
+        # Given: 第一次軟刪除
 
-    #     # Then: 驗證軟刪除結果
-    #     assert result2 == DeletionResult.ALREADY_DELETED
+        # When: 第一次軟刪除
+        result1 = self.crud.delete_schedule(
+            db_session,
+            test_giver_schedule.id,
+            deleted_by=test_giver_schedule.giver_id,
+            deleted_by_role=UserRoleEnum.GIVER,
+        )
 
-    #     # Then: 確認時段仍然存在但已被軟刪除
-    #     found_schedule = self.crud.get_schedule_including_deleted(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #     )
+        # Then: 驗證軟刪除結果
+        assert result1 == DeletionResult.SUCCESS
 
-    #     # Then: 驗證資料完整性
-    #     assert found_schedule.giver_id == test_giver_schedule.giver_id
-    #     assert found_schedule.taker_id == test_giver_schedule.taker_id
-    #     assert found_schedule.date == test_giver_schedule.date
-    #     assert found_schedule.start_time == test_giver_schedule.start_time
-    #     assert found_schedule.end_time == test_giver_schedule.end_time
-    #     assert found_schedule.note == test_giver_schedule.note
+        # Given: 第二次軟刪除（應該返回已經刪除）
 
-    #     # Then: 驗證業務邏輯
-    #     assert found_schedule is not None
-    #     assert found_schedule.id == test_giver_schedule.id
-    #     assert (
-    #         found_schedule.status == ScheduleStatusEnum.CANCELLED
-    #     )  # 軟刪除後狀態變為 CANCELLED
-    #     assert found_schedule.deleted_at is not None
-    #     assert found_schedule.deleted_by == test_giver_schedule.giver_id
-    #     assert found_schedule.deleted_by_role == UserRoleEnum.GIVER
-    #     assert found_schedule.is_active is False
-    #     assert found_schedule.is_deleted is True
+        # When: 第二次軟刪除
+        result2 = self.crud.delete_schedule(
+            db_session,
+            test_giver_schedule.id,
+            deleted_by=test_giver_schedule.giver_id,
+            deleted_by_role=UserRoleEnum.GIVER,
+        )
 
-    # def test_delete_schedule_not_found(self, db_session: Session):
-    #     """測試刪除時段：404 資源不存在錯誤。"""
-    #     # Given: 測試刪除不存在的時段
+        # Then: 驗證軟刪除結果
+        assert result2 == DeletionResult.ALREADY_DELETED
 
-    #     # When: 刪除時段
+        # Then: 確認時段仍然存在但已被軟刪除
+        found_schedule = self.crud.get_schedule_including_deleted(
+            db_session,
+            test_giver_schedule.id,
+        )
 
-    #     # Then: 應該返回 NOT_FOUND
-    #     result = self.crud.delete_schedule(
-    #         db_session,
-    #         999,
-    #     )
+        # Then: 驗證資料完整性
+        assert found_schedule.giver_id == test_giver_schedule.giver_id
+        assert found_schedule.taker_id == test_giver_schedule.taker_id
+        assert found_schedule.date == test_giver_schedule.date
+        assert found_schedule.start_time == test_giver_schedule.start_time
+        assert found_schedule.end_time == test_giver_schedule.end_time
+        assert found_schedule.note == test_giver_schedule.note
 
-    #     assert result == DeletionResult.NOT_FOUND
+        # Then: 驗證業務邏輯
+        assert found_schedule is not None
+        assert found_schedule.id == test_giver_schedule.id
+        assert (
+            found_schedule.status == ScheduleStatusEnum.CANCELLED
+        )  # 軟刪除後狀態變為 CANCELLED
+        assert found_schedule.deleted_at is not None
+        assert found_schedule.deleted_by == test_giver_schedule.giver_id
+        assert found_schedule.deleted_by_role == UserRoleEnum.GIVER
+        assert found_schedule.is_active is False
+        assert found_schedule.is_deleted is True
 
-    # @pytest.mark.parametrize(
-    #     "status,note",
-    #     [
-    #         (ScheduleStatusEnum.ACCEPTED, "測試已接受的時段"),
-    #         (ScheduleStatusEnum.COMPLETED, "測試已完成的時段"),
-    #     ],
-    # )
-    # def test_delete_schedule_cannot_delete_final_states(
-    #     self,
-    #     db_session: Session,
-    #     status: ScheduleStatusEnum,
-    #     note: str,
-    # ):
-    #     """測試刪除最終狀態的時段（已接受、已完成）。
+    @pytest.mark.parametrize(
+        "status,note",
+        [
+            (ScheduleStatusEnum.ACCEPTED, "測試已接受的時段"),
+            (ScheduleStatusEnum.COMPLETED, "測試已完成的時段"),
+        ],
+    )
+    def test_delete_schedule_cannot_delete_final_states(
+        self,
+        db_session: Session,
+        status: ScheduleStatusEnum,
+        note: str,
+    ):
+        """測試刪除最終狀態的時段（已接受、已完成）。
 
-    #     這些狀態的時段不應該被刪除，因為它們代表已確定的業務狀態。
+        這些狀態的時段不應該被刪除，因為它們代表已確定的業務狀態。
 
-    #     Args:
-    #         status: 時段狀態（ACCEPTED 或 COMPLETED）
-    #         note: 時段備註
-    #     """
-    #     # Given: 建立指定狀態的時段
+        Args:
+            status: 時段狀態（ACCEPTED 或 COMPLETED）
+            note: 時段備註
+        """
+        # Given: 建立指定狀態的時段
 
-    #     # When: 建立指定狀態的時段
-    #     schedule = Schedule(
-    #         giver_id=1,
-    #         taker_id=1,
-    #         status=status,
-    #         date=date(2025, 9, 15),
-    #         start_time=time(9, 0),
-    #         end_time=time(10, 0),
-    #         note=note,
-    #     )
-    #     db_session.add(schedule)
-    #     db_session.commit()
+        # When: 建立指定狀態的時段
+        schedule = Schedule(
+            giver_id=1,
+            taker_id=1,
+            status=status,
+            date=date(2025, 9, 15),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            note=note,
+        )
+        db_session.add(schedule)
+        db_session.commit()
 
-    #     # When: 嘗試刪除最終狀態的時段
-    #     result = self.crud.delete_schedule(
-    #         db_session,
-    #         schedule.id,
-    #         deleted_by=1,
-    #         deleted_by_role=UserRoleEnum.GIVER,
-    #     )
+        # When: 嘗試刪除最終狀態的時段
+        result = self.crud.delete_schedule(
+            db_session,
+            schedule.id,
+            deleted_by=1,
+            deleted_by_role=UserRoleEnum.GIVER,
+        )
 
-    #     # Then: 應該返回無法刪除的結果
-    #     assert result == DeletionResult.CANNOT_DELETE
+        # Then: 應該返回無法刪除的結果
+        assert result == DeletionResult.CANNOT_DELETE
 
-    #     # Then: 驗證時段狀態沒有改變
-    #     db_session.refresh(schedule)
-    #     assert schedule.status == status
-    #     assert schedule.deleted_at is None
+        # Then: 驗證時段狀態沒有改變
+        db_session.refresh(schedule)
+        assert schedule.status == status
+        assert schedule.deleted_at is None
