@@ -79,16 +79,15 @@ def get_deletion_explanation(status: str) -> str:
 
 def create_schedule_cannot_be_deleted_error(
     schedule_id: int | str,
+    schedule_status: str,
     reason: str | None = None,
-    schedule_status: str | None = None,
 ) -> ScheduleCannotBeDeletedError:
     """建立時段無法刪除錯誤。"""
     details = {}
     if reason:
         details["reason"] = reason
-    if schedule_status:
-        details["current_status"] = schedule_status
-        details["explanation"] = get_deletion_explanation(schedule_status)
+    details["current_status"] = schedule_status
+    details["explanation"] = get_deletion_explanation(schedule_status)
 
     return ScheduleCannotBeDeletedError(schedule_id, details=details)
 

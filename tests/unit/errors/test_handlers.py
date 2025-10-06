@@ -112,8 +112,14 @@ class TestErrorFactories:
             (
                 create_schedule_cannot_be_deleted_error,
                 ScheduleCannotBeDeletedError,
-                789,
+                (789, "ACCEPTED"),
                 "時段無法刪除: ID=789",
+            ),
+            (
+                create_schedule_cannot_be_deleted_error,
+                ScheduleCannotBeDeletedError,
+                (790, "COMPLETED"),
+                "時段無法刪除: ID=790",
             ),
             (
                 create_schedule_overlap_error,
@@ -128,7 +134,12 @@ class TestErrorFactories:
         # Given: 準備測試參數
 
         # When: 建立錯誤實例
-        error = func(param)
+        if isinstance(param, tuple):
+            # 處理需要多個參數的函數
+            error = func(*param)
+        else:
+            # 處理單一參數的函數
+            error = func(param)
 
         # Then: 驗證 error 錯誤型別正確、為 Exception 的實例
         assert isinstance(error, exc_class)
@@ -155,8 +166,14 @@ class TestErrorFactories:
             (
                 create_schedule_cannot_be_deleted_error,
                 ScheduleCannotBeDeletedError,
-                789,
+                (789, "ACCEPTED"),
                 "時段無法刪除: ID=789",
+            ),
+            (
+                create_schedule_cannot_be_deleted_error,
+                ScheduleCannotBeDeletedError,
+                (790, "COMPLETED"),
+                "時段無法刪除: ID=790",
             ),
             (
                 create_schedule_overlap_error,
@@ -174,7 +191,12 @@ class TestErrorFactories:
 
         # When: 拋出錯誤，並存入 exc_info
         with pytest.raises(exc_class) as exc_info:
-            raise func(param)
+            if isinstance(param, tuple):
+                # 處理需要多個參數的函數
+                raise func(*param)
+            else:
+                # 處理單一參數的函數
+                raise func(param)
 
         # Then: 驗證錯誤訊息
         assert str(exc_info.value) == expected_msg

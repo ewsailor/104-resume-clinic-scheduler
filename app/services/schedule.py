@@ -421,8 +421,8 @@ class ScheduleService:
                 # 拋出業務邏輯錯誤，包含時段 ID、刪除原因和當前狀態，幫助使用者理解為什麼無法刪除
                 raise create_schedule_cannot_be_deleted_error(
                     schedule_id,
+                    schedule_status,
                     reason="狀態不允許刪除",
-                    schedule_status=schedule_status,
                 )
             case DeletionResult.ALREADY_DELETED:
                 # 已經刪除：記錄警告
