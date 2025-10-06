@@ -412,227 +412,227 @@ class TestScheduleRoutes:
         assert "msg" in error_detail
         assert "input" in error_detail
 
-    # # ===== 更新時段 =====
-    # def test_update_schedule_success(
-    #     self,
-    #     client,
-    #     schedule_in_db,
-    #     schedule_update_payload,
-    #     integration_db_session,
-    # ):
-    #     """測試更新時段 - 成功（200）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
-    #     schedule_id = schedule_in_db.id
+    # ===== 更新時段 =====
+    def test_update_schedule_success(
+        self,
+        client,
+        schedule_in_db,
+        schedule_update_payload,
+        integration_db_session,
+    ):
+        """測試更新時段 - 成功（200）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
+        schedule_id = schedule_in_db.id
 
-    #     # WHEN：呼叫更新時段 API
-    #     response = client.patch(
-    #         f"/api/v1/schedules/{schedule_id}", json=schedule_update_payload
-    #     )
+        # WHEN：呼叫更新時段 API
+        response = client.patch(
+            f"/api/v1/schedules/{schedule_id}", json=schedule_update_payload
+        )
 
-    #     # THEN：確認更新成功
-    #     assert response.status_code == status.HTTP_200_OK
-    #     data = response.json()
-    #     assert isinstance(data, dict)  # 回傳格式是 dict
+        # THEN：確認更新成功
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, dict)  # 回傳格式是 dict
 
-    #     # ===== 驗證回應資料結構 =====
-    #     # 驗證更新後的資料
-    #     assert data["note"] == "更新後的時段"
-    #     assert data["updated_by"] == 1
-    #     assert data["updated_by_role"] == "GIVER"
+        # ===== 驗證回應資料結構 =====
+        # 驗證更新後的資料
+        assert data["note"] == "更新後的時段"
+        assert data["updated_by"] == 1
+        assert data["updated_by_role"] == "GIVER"
 
-    #     # 驗證其他欄位保持不變
-    #     assert data["id"] == schedule_id
-    #     assert data["giver_id"] == 1
-    #     assert data["taker_id"] is None
-    #     assert data["status"] == "DRAFT"  # 夾具中的預設狀態
-    #     assert data["date"] == "2024-12-25"
-    #     assert data["start_time"] == "09:00:00"
-    #     assert data["end_time"] == "10:00:00"
-    #     assert data["created_by"] is None  # 夾具中沒有設定 created_by
-    #     assert data["created_by_role"] == "SYSTEM"  # 預設角色
+        # 驗證其他欄位保持不變
+        assert data["id"] == schedule_id
+        assert data["giver_id"] == 1
+        assert data["taker_id"] is None
+        assert data["status"] == "DRAFT"  # 夾具中的預設狀態
+        assert data["date"] == "2024-12-25"
+        assert data["start_time"] == "09:00:00"
+        assert data["end_time"] == "10:00:00"
+        assert data["created_by"] is None  # 夾具中沒有設定 created_by
+        assert data["created_by_role"] == "SYSTEM"  # 預設角色
 
-    #     # 時間戳記驗證
-    #     assert "created_at" in data
-    #     assert "updated_at" in data
-    #     assert data["created_at"] is not None
-    #     assert data["updated_at"] is not None
+        # 時間戳記驗證
+        assert "created_at" in data
+        assert "updated_at" in data
+        assert data["created_at"] is not None
+        assert data["updated_at"] is not None
 
-    #     # 更新後，updated_at 應該不同於 created_at
-    #     assert data["created_at"] != data["updated_at"]
+        # 更新後，updated_at 應該不同於 created_at
+        assert data["created_at"] != data["updated_at"]
 
-    #     # 軟刪除相關（更新時應仍為 null）
-    #     assert data["deleted_at"] is None
-    #     assert data["deleted_by"] is None
-    #     assert data["deleted_by_role"] is None
+        # 軟刪除相關（更新時應仍為 null）
+        assert data["deleted_at"] is None
+        assert data["deleted_by"] is None
+        assert data["deleted_by_role"] is None
 
-    #     # ===== 查詢資料庫，驗證更新後的內容是否正確 =====
-    #     # 查主鍵，故使用 get() 而不是 .query().filter(...).first()
-    #     db_schedule = integration_db_session.get(ScheduleModel, schedule_id)
+        # ===== 查詢資料庫，驗證更新後的內容是否正確 =====
+        # 查主鍵，故使用 get() 而不是 .query().filter(...).first()
+        db_schedule = integration_db_session.get(ScheduleModel, schedule_id)
 
-    #     # 驗證記錄存在
-    #     assert db_schedule is not None
+        # 驗證記錄存在
+        assert db_schedule is not None
 
-    #     # 驗證更新後的資料
-    #     assert db_schedule.note == "更新後的時段"
-    #     assert db_schedule.updated_by == 1
-    #     assert db_schedule.updated_by_role == "GIVER"
+        # 驗證更新後的資料
+        assert db_schedule.note == "更新後的時段"
+        assert db_schedule.updated_by == 1
+        assert db_schedule.updated_by_role == "GIVER"
 
-    #     # 驗證其他欄位保持不變
-    #     assert db_schedule.id == schedule_id
-    #     assert db_schedule.giver_id == 1
-    #     assert db_schedule.taker_id is None
-    #     assert db_schedule.created_by is None  # 夾具中沒有設定 created_by
-    #     assert db_schedule.created_by_role == "SYSTEM"  # 預設角色
+        # 驗證其他欄位保持不變
+        assert db_schedule.id == schedule_id
+        assert db_schedule.giver_id == 1
+        assert db_schedule.taker_id is None
+        assert db_schedule.created_by is None  # 夾具中沒有設定 created_by
+        assert db_schedule.created_by_role == "SYSTEM"  # 預設角色
 
-    #     # ORM 將資料庫中 Enum 物件，轉回 Python 的 Enum 物件，故可以直接用 Enum 比對
-    #     assert db_schedule.status == ScheduleStatusEnum.DRAFT  # 夾具中的預設狀態
+        # ORM 將資料庫中 Enum 物件，轉回 Python 的 Enum 物件，故可以直接用 Enum 比對
+        assert db_schedule.status == ScheduleStatusEnum.DRAFT  # 夾具中的預設狀態
 
-    #     # 驗證 ORM 資料型別轉換
-    #     # 1. 請求階段，API 傳入的 date、time 是 JSON 字串格式
-    #     # 2. Pydantic schema 將 JSON 字串，轉成 Python 的 date、time 物件
-    #     # 3. ORM 將 Python 的 date、time 物件，寫入 MySQL/MariaDB 資料庫成 DATE、TIME 物件
-    #     # 4. 查詢資料庫時，ORM 將資料庫中 DATE、TIME 物件，轉回 Python 的 date、time 物件
-    #     assert db_schedule.date == date(2024, 12, 25)
-    #     assert db_schedule.start_time == time(9, 0, 0)
-    #     assert db_schedule.end_time == time(10, 0, 0)
-    #     # 驗證 ORM 物件轉為字串後，與原始請求一致 (JSON 格式)
-    #     assert str(db_schedule.date) == "2024-12-25"
-    #     assert str(db_schedule.start_time) == "09:00:00"
-    #     assert str(db_schedule.end_time) == "10:00:00"
+        # 驗證 ORM 資料型別轉換
+        # 1. 請求階段，API 傳入的 date、time 是 JSON 字串格式
+        # 2. Pydantic schema 將 JSON 字串，轉成 Python 的 date、time 物件
+        # 3. ORM 將 Python 的 date、time 物件，寫入 MySQL/MariaDB 資料庫成 DATE、TIME 物件
+        # 4. 查詢資料庫時，ORM 將資料庫中 DATE、TIME 物件，轉回 Python 的 date、time 物件
+        assert db_schedule.date == date(2024, 12, 25)
+        assert db_schedule.start_time == time(9, 0, 0)
+        assert db_schedule.end_time == time(10, 0, 0)
+        # 驗證 ORM 物件轉為字串後，與原始請求一致 (JSON 格式)
+        assert str(db_schedule.date) == "2024-12-25"
+        assert str(db_schedule.start_time) == "09:00:00"
+        assert str(db_schedule.end_time) == "10:00:00"
 
-    #     # 時間戳記驗證
-    #     assert db_schedule.created_at is not None
-    #     assert db_schedule.updated_at is not None
+        # 時間戳記驗證
+        assert db_schedule.created_at is not None
+        assert db_schedule.updated_at is not None
 
-    #     # 更新後，updated_at 應該不同於 created_at
-    #     assert db_schedule.created_at != db_schedule.updated_at
+        # 更新後，updated_at 應該不同於 created_at
+        assert db_schedule.created_at != db_schedule.updated_at
 
-    #     # 軟刪除相關（更新時應仍為 null）
-    #     assert db_schedule.deleted_at is None
-    #     assert db_schedule.deleted_by is None
-    #     assert db_schedule.deleted_by_role is None
+        # 軟刪除相關（更新時應仍為 null）
+        assert db_schedule.deleted_at is None
+        assert db_schedule.deleted_by is None
+        assert db_schedule.deleted_by_role is None
 
-    # def test_update_schedule_end_before_start(
-    #     self, client, schedule_in_db, schedule_update_payload
-    # ):
-    #     """測試更新時段 - 參數驗證錯誤（400）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
-    #     schedule_id = schedule_in_db.id
+    def test_update_schedule_end_before_start(
+        self, client, schedule_in_db, schedule_update_payload
+    ):
+        """測試更新時段 - 參數驗證錯誤（400）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
+        schedule_id = schedule_in_db.id
 
-    #     # 修改為無效的時間邏輯：結束時間早於開始時間
-    #     invalid_data = schedule_update_payload.copy()
-    #     invalid_data["schedule"]["start_time"] = "10:00:00"
-    #     invalid_data["schedule"]["end_time"] = "09:00:00"
+        # 修改為無效的時間邏輯：結束時間早於開始時間
+        invalid_data = schedule_update_payload.copy()
+        invalid_data["schedule"]["start_time"] = "10:00:00"
+        invalid_data["schedule"]["end_time"] = "09:00:00"
 
-    #     # WHEN：呼叫更新時段 API
-    #     response = client.patch(f"/api/v1/schedules/{schedule_id}", json=invalid_data)
+        # WHEN：呼叫更新時段 API
+        response = client.patch(f"/api/v1/schedules/{schedule_id}", json=invalid_data)
 
-    #     # THEN：確認返回驗證錯誤
-    #     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    #     data = response.json()
-    #     assert "error" in data
+        # THEN：確認返回驗證錯誤
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        data = response.json()
+        assert "error" in data
 
-    #     # 驗證錯誤回應的完整格式
-    #     error = data["error"]
-    #     assert error["message"] == "開始時間必須早於結束時間"
-    #     assert error["status_code"] == 400
-    #     assert error["code"] == "ROUTER_BAD_REQUEST"
-    #     assert "timestamp" in error
-    #     assert "details" in error
+        # 驗證錯誤回應的完整格式
+        error = data["error"]
+        assert error["message"] == "開始時間必須早於結束時間"
+        assert error["status_code"] == 400
+        assert error["code"] == "ROUTER_BAD_REQUEST"
+        assert "timestamp" in error
+        assert "details" in error
 
-    # def test_update_schedule_not_found(self, client, schedule_update_payload):
-    #     """測試更新時段 - 時段不存在（404）。"""
-    #     # GIVEN：不存在的時段 ID 和有效的更新資料
+    def test_update_schedule_not_found(self, client, schedule_update_payload):
+        """測試更新時段 - 時段不存在（404）。"""
+        # GIVEN：不存在的時段 ID 和有效的更新資料
 
-    #     # WHEN：呼叫更新時段 API
-    #     response = client.patch("/api/v1/schedules/99999", json=schedule_update_payload)
+        # WHEN：呼叫更新時段 API
+        response = client.patch("/api/v1/schedules/99999", json=schedule_update_payload)
 
-    #     # THEN：確認返回找不到錯誤
-    #     assert response.status_code == status.HTTP_404_NOT_FOUND
-    #     data = response.json()
-    #     assert "error" in data
+        # THEN：確認返回找不到錯誤
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        data = response.json()
+        assert "error" in data
 
-    #     # 驗證錯誤回應的完整格式
-    #     error = data["error"]
-    #     assert error["message"] == "時段不存在: ID=99999"
-    #     assert error["status_code"] == 404
-    #     assert error["code"] == "SERVICE_SCHEDULE_NOT_FOUND"
-    #     assert "timestamp" in error
-    #     assert "details" in error
+        # 驗證錯誤回應的完整格式
+        error = data["error"]
+        assert error["message"] == "時段不存在: ID=99999"
+        assert error["status_code"] == 404
+        assert error["code"] == "SERVICE_SCHEDULE_NOT_FOUND"
+        assert "timestamp" in error
+        assert "details" in error
 
-    # def test_update_schedule_time_conflict(
-    #     self, client, schedule_in_db, schedule_update_payload, schedule_create_payload
-    # ):
-    #     """測試更新時段 - 時段衝突錯誤（409）。"""
-    #     # GIVEN：先建立一個時段，然後嘗試更新為重疊的時段
-    #     # 1. 先建立第一個時段
-    #     first_payload = schedule_create_payload.copy()
-    #     first_payload["schedules"][0]["date"] = "2024-01-15"
-    #     first_payload["schedules"][0]["start_time"] = "09:00:00"
-    #     first_payload["schedules"][0]["end_time"] = "10:00:00"
+    def test_update_schedule_time_conflict(
+        self, client, schedule_in_db, schedule_update_payload, schedule_create_payload
+    ):
+        """測試更新時段 - 時段衝突錯誤（409）。"""
+        # GIVEN：先建立一個時段，然後嘗試更新為重疊的時段
+        # 1. 先建立第一個時段
+        first_payload = schedule_create_payload.copy()
+        first_payload["schedules"][0]["date"] = "2024-01-15"
+        first_payload["schedules"][0]["start_time"] = "09:00:00"
+        first_payload["schedules"][0]["end_time"] = "10:00:00"
 
-    #     # 建立第一個時段
-    #     first_response = client.post("/api/v1/schedules", json=first_payload)
-    #     assert first_response.status_code == status.HTTP_201_CREATED
+        # 建立第一個時段
+        first_response = client.post("/api/v1/schedules", json=first_payload)
+        assert first_response.status_code == status.HTTP_201_CREATED
 
-    #     # 2. 更新現有時段為重疊的時間
-    #     schedule_id = schedule_in_db.id
-    #     conflict_update_data = schedule_update_payload.copy()
-    #     conflict_update_data["schedule"]["date"] = "2024-01-15"
-    #     conflict_update_data["schedule"]["start_time"] = "09:30:00"  # 與第一個時段重疊
-    #     conflict_update_data["schedule"]["end_time"] = "10:30:00"
+        # 2. 更新現有時段為重疊的時間
+        schedule_id = schedule_in_db.id
+        conflict_update_data = schedule_update_payload.copy()
+        conflict_update_data["schedule"]["date"] = "2024-01-15"
+        conflict_update_data["schedule"]["start_time"] = "09:30:00"  # 與第一個時段重疊
+        conflict_update_data["schedule"]["end_time"] = "10:30:00"
 
-    #     # WHEN：呼叫更新時段 API
-    #     response = client.patch(
-    #         f"/api/v1/schedules/{schedule_id}", json=conflict_update_data
-    #     )
+        # WHEN：呼叫更新時段 API
+        response = client.patch(
+            f"/api/v1/schedules/{schedule_id}", json=conflict_update_data
+        )
 
-    #     # THEN：確認返回時段衝突錯誤
-    #     assert response.status_code == status.HTTP_409_CONFLICT
-    #     data = response.json()
-    #     assert "error" in data
+        # THEN：確認返回時段衝突錯誤
+        assert response.status_code == status.HTTP_409_CONFLICT
+        data = response.json()
+        assert "error" in data
 
-    #     # 驗證錯誤回應的完整格式
-    #     error = data["error"]
-    #     assert "更新時段" in error["message"]
-    #     assert "檢測到" in error["message"]
-    #     assert "重疊時段" in error["message"]
-    #     assert error["status_code"] == 409
-    #     assert error["code"] == "SERVICE_SCHEDULE_OVERLAP"
-    #     assert "timestamp" in error
-    #     assert "details" in error
-    #     assert "overlapping_schedules" in error["details"]
+        # 驗證錯誤回應的完整格式
+        error = data["error"]
+        assert "更新時段" in error["message"]
+        assert "檢測到" in error["message"]
+        assert "重疊時段" in error["message"]
+        assert error["status_code"] == 409
+        assert error["code"] == "SERVICE_SCHEDULE_OVERLAP"
+        assert "timestamp" in error
+        assert "details" in error
+        assert "overlapping_schedules" in error["details"]
 
-    # def test_update_schedule_validation_error(
-    #     self, client, schedule_in_db, schedule_update_payload
-    # ):
-    #     """測試更新時段 - 參數驗證錯誤（422）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
-    #     schedule_id = schedule_in_db.id
+    def test_update_schedule_validation_error(
+        self, client, schedule_in_db, schedule_update_payload
+    ):
+        """測試更新時段 - 參數驗證錯誤（422）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
+        schedule_id = schedule_in_db.id
 
-    #     # 使用夾具資料並添加無效的欄位值創造 422 錯誤
-    #     invalid_data = schedule_update_payload.copy()
-    #     invalid_data["schedule"]["giver_id"] = -1  # 無效的 giver_id（必須大於 0）
+        # 使用夾具資料並添加無效的欄位值創造 422 錯誤
+        invalid_data = schedule_update_payload.copy()
+        invalid_data["schedule"]["giver_id"] = -1  # 無效的 giver_id（必須大於 0）
 
-    #     # WHEN：呼叫更新時段 API
-    #     response = client.patch(f"/api/v1/schedules/{schedule_id}", json=invalid_data)
+        # WHEN：呼叫更新時段 API
+        response = client.patch(f"/api/v1/schedules/{schedule_id}", json=invalid_data)
 
-    #     # THEN：確認返回驗證錯誤
-    #     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    #     data = response.json()
-    #     assert "detail" in data
+        # THEN：確認返回驗證錯誤
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        data = response.json()
+        assert "detail" in data
 
-    #     # 驗證 422 錯誤的完整格式
-    #     detail = data["detail"]
-    #     assert isinstance(detail, list)
-    #     assert len(detail) > 0
+        # 驗證 422 錯誤的完整格式
+        detail = data["detail"]
+        assert isinstance(detail, list)
+        assert len(detail) > 0
 
-    #     # 驗證錯誤詳情的結構
-    #     error_detail = detail[0]
-    #     assert "type" in error_detail
-    #     assert "loc" in error_detail
-    #     assert "msg" in error_detail
-    #     assert "input" in error_detail
+        # 驗證錯誤詳情的結構
+        error_detail = detail[0]
+        assert "type" in error_detail
+        assert "loc" in error_detail
+        assert "msg" in error_detail
+        assert "input" in error_detail
 
     # # ===== 刪除時段 =====
     # def test_delete_schedule_success(
