@@ -12,6 +12,7 @@ from app.enums.models import ScheduleStatusEnum, UserRoleEnum
 from app.enums.operations import OperationContext
 from app.errors.exceptions import (
     DatabaseError,
+    ScheduleNotFoundError,
     ScheduleOverlapError,
 )
 from app.schemas import ScheduleBase
@@ -944,58 +945,67 @@ class TestScheduleService:
                 mock_db, giver_id, taker_id, status_filter
             )
 
-    # # ===== 查詢單一時段 =====
-    # @patch('app.services.schedule.logger')
-    # def test_get_schedule_success(self, mock_logger, service, mock_db):
-    #     """測試查詢單一時段 - 成功。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
+    # ===== 查詢單一時段 =====
+    @patch('app.services.schedule.logger')
+    def test_get_schedule_success(self, mock_logger, service, mock_db):
+        """測試查詢單一時段 - 成功。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
 
-    #     mock_schedule = self.create_mock_schedule(
-    #         id=1,
-    #         giver_id=1,
-    #         taker_id=2,
-    #         date=date(2024, 1, 15),
-    #         start_time=time(9, 0),
-    #         end_time=time(10, 0),
-    #         status=ScheduleStatusEnum.AVAILABLE,
-    #     )
+        mock_schedule = self.create_mock_schedule(
+            id=1,
+            giver_id=1,
+            taker_id=2,
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=ScheduleStatusEnum.AVAILABLE,
+        )
 
-    #     # 模擬 CRUD 層查詢返回時段
-    #     with patch.object(service.schedule_crud, 'get_schedule') as mock_get:
-    #         # 設定模擬返回值
-    #         mock_get.return_value = mock_schedule
+        # 模擬 CRUD 層查詢返回時段
+        with patch.object(service.schedule_crud, 'get_schedule') as mock_get:
+            # 設定模擬返回值
+            mock_get.return_value = mock_schedule
 
-    #         # WHEN：查詢單一時段
-    #         result = service.get_schedule(mock_db, schedule_id)
+            # WHEN：查詢單一時段
+            result = service.get_schedule(mock_db, schedule_id)
 
-    #         # THEN：驗證 CRUD 層被正確呼叫
-    #         mock_get.assert_called_once_with(mock_db, schedule_id)
+            # THEN：驗證 CRUD 層被正確呼叫
+            mock_get.assert_called_once_with(mock_db, schedule_id)
 
-    #         # 驗證查詢成功
-    #         assert result == mock_schedule
+            # 驗證查詢成功
+            assert result == mock_schedule
 
-    #         # 確認記錄了查詢日誌
-    #         mock_logger.info.assert_called_once_with(
-    #             f"查詢時段完成: schedule_id={schedule_id}, "
-    #             f"giver_id={mock_schedule.giver_id}, taker_id={mock_schedule.taker_id}, "
-    #             f"status={mock_schedule.status.value}, date={mock_schedule.date}"
-    #         )
+            # 驗證返回對象的屬性值
+            assert result.id == 1
+            assert result.giver_id == 1
+            assert result.taker_id == 2
+            assert result.date == date(2024, 1, 15)
+            assert result.start_time == time(9, 0)
+            assert result.end_time == time(10, 0)
+            assert result.status == ScheduleStatusEnum.AVAILABLE
 
-    # @patch('app.services.schedule.logger')
-    # def test_get_schedule_not_found(self, mock_logger, service, mock_db):
-    #     """測試查詢單一時段 - 時段不存在。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 999  # 不存在的 ID
+            # 確認記錄了查詢日誌
+            mock_logger.info.assert_called_once_with(
+                f"查詢時段完成: schedule_id={schedule_id}, "
+                f"giver_id={mock_schedule.giver_id}, taker_id={mock_schedule.taker_id}, "
+                f"status={mock_schedule.status.value}, date={mock_schedule.date}"
+            )
 
-    #     # 模擬 CRUD 層查詢返回 None（時段不存在）
-    #     with patch.object(service.schedule_crud, 'get_schedule') as mock_get:
-    #         # 設定模擬返回值
-    #         mock_get.return_value = None
+    @patch('app.services.schedule.logger')
+    def test_get_schedule_not_found(self, mock_logger, service, mock_db):
+        """測試查詢單一時段 - 時段不存在。"""
+        # GIVEN：準備測試資料
+        schedule_id = 999  # 不存在的 ID
 
-    #         # WHEN & THEN：確認拋出時段不存在錯誤
-    #         with pytest.raises(ScheduleNotFoundError):
-    #             service.get_schedule(mock_db, schedule_id)
+        # 模擬 CRUD 層查詢返回 None（時段不存在）
+        with patch.object(service.schedule_crud, 'get_schedule') as mock_get:
+            # 設定模擬返回值
+            mock_get.return_value = None
+
+            # WHEN & THEN：確認拋出時段不存在錯誤
+            with pytest.raises(ScheduleNotFoundError):
+                service.get_schedule(mock_db, schedule_id)
 
     # # ===== 更新時段 =====
     # @patch('app.services.schedule.logger')
