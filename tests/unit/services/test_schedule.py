@@ -1394,6 +1394,38 @@ class TestScheduleService:
                 )
 
     @patch('app.services.schedule.logger')
+    def test_delete_schedule_cannot_delete_schedule_not_found(
+        self, mock_logger, service, mock_db
+    ):
+        """測試刪除時段 - 無法刪除但時段不存在（schedule 為 None）。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        deleted_by = 2
+        deleted_by_role = UserRoleEnum.GIVER
+
+        # 模擬 CRUD 層刪除返回無法刪除結果
+        with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
+            mock_delete.return_value = DeletionResult.CANNOT_DELETE
+
+            # 模擬查詢時段返回 None（時段不存在）
+            with patch.object(
+                service.schedule_crud, 'get_schedule_including_deleted'
+            ) as mock_get:
+                mock_get.return_value = None
+
+                # WHEN & THEN：確認拋出時段不存在錯誤
+                with pytest.raises(ScheduleNotFoundError):
+                    service.delete_schedule(
+                        mock_db, schedule_id, deleted_by, deleted_by_role
+                    )
+
+                # 驗證 CRUD 層被正確呼叫
+                mock_delete.assert_called_once_with(
+                    mock_db, schedule_id, deleted_by, deleted_by_role
+                )
+                mock_get.assert_called_once_with(mock_db, schedule_id)
+
+    @patch('app.services.schedule.logger')
     def test_delete_schedule_already_deleted(self, mock_logger, service, mock_db):
         """測試刪除時段 - 已經刪除。"""
         # GIVEN：準備測試資料
