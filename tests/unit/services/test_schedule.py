@@ -9,9 +9,11 @@ import pytest
 
 # ===== 本地模組 =====
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
-from app.enums.operations import OperationContext
+from app.enums.operations import DeletionResult, OperationContext
 from app.errors.exceptions import (
+    BusinessLogicError,
     DatabaseError,
+    ScheduleCannotBeDeletedError,
     ScheduleNotFoundError,
     ScheduleOverlapError,
 )
@@ -1281,175 +1283,175 @@ class TestScheduleService:
                 f"更新者={updated_by}, 角色={updated_by_role.value}"
             )
 
-    # # ===== 刪除時段 =====
-    # @patch('app.services.schedule.logger')
-    # def test_delete_schedule_success(self, mock_logger, service, mock_db):
-    #     """測試刪除時段 - 成功。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
-    #     deleted_by = 2
-    #     deleted_by_role = UserRoleEnum.GIVER
+    # ===== 刪除時段 =====
+    @patch('app.services.schedule.logger')
+    def test_delete_schedule_success(self, mock_logger, service, mock_db):
+        """測試刪除時段 - 成功。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        deleted_by = 2
+        deleted_by_role = UserRoleEnum.GIVER
 
-    #     # 模擬 CRUD 層刪除返回成功結果
-    #     with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
-    #         # 設定模擬返回值
-    #         mock_delete.return_value = DeletionResult.SUCCESS
+        # 模擬 CRUD 層刪除返回成功結果
+        with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
+            # 設定模擬返回值
+            mock_delete.return_value = DeletionResult.SUCCESS
 
-    #         # WHEN：刪除時段
-    #         result = service.delete_schedule(
-    #             mock_db, schedule_id, deleted_by, deleted_by_role
-    #         )
+            # WHEN：刪除時段
+            result = service.delete_schedule(
+                mock_db, schedule_id, deleted_by, deleted_by_role
+            )
 
-    #         # THEN：驗證 CRUD 層被正確呼叫
-    #         mock_delete.assert_called_once_with(
-    #             mock_db, schedule_id, deleted_by, deleted_by_role
-    #         )
+            # THEN：驗證 CRUD 層被正確呼叫
+            mock_delete.assert_called_once_with(
+                mock_db, schedule_id, deleted_by, deleted_by_role
+            )
 
-    #         # 確認刪除成功
-    #         assert result is True
+            # 確認刪除成功
+            assert result is True
 
-    #         # 確認記錄了成功日誌
-    #         mock_logger.info.assert_called_once_with(
-    #             f"時段 {schedule_id} 軟刪除成功, "
-    #             f"deleted_by={deleted_by}, role={deleted_by_role}"
-    #         )
+            # 確認記錄了成功日誌
+            mock_logger.info.assert_called_once_with(
+                f"時段 {schedule_id} 軟刪除成功, "
+                f"deleted_by={deleted_by}, role={deleted_by_role}"
+            )
 
-    # @patch('app.services.schedule.logger')
-    # def test_delete_schedule_not_found(self, mock_logger, service, mock_db):
-    #     """測試刪除時段 - 時段不存在。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 999  # 不存在的 ID
-    #     deleted_by = 2
-    #     deleted_by_role = UserRoleEnum.GIVER
+    @patch('app.services.schedule.logger')
+    def test_delete_schedule_not_found(self, mock_logger, service, mock_db):
+        """測試刪除時段 - 時段不存在。"""
+        # GIVEN：準備測試資料
+        schedule_id = 999  # 不存在的 ID
+        deleted_by = 2
+        deleted_by_role = UserRoleEnum.GIVER
 
-    #     # 模擬 CRUD 層刪除返回不存在結果
-    #     with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
-    #         # 設定模擬返回值
-    #         mock_delete.return_value = DeletionResult.NOT_FOUND
+        # 模擬 CRUD 層刪除返回不存在結果
+        with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
+            # 設定模擬返回值
+            mock_delete.return_value = DeletionResult.NOT_FOUND
 
-    #         # WHEN & THEN：確認拋出時段不存在錯誤
-    #         with pytest.raises(ScheduleNotFoundError):
-    #             service.delete_schedule(
-    #                 mock_db, schedule_id, deleted_by, deleted_by_role
-    #             )
+            # WHEN & THEN：確認拋出時段不存在錯誤
+            with pytest.raises(ScheduleNotFoundError):
+                service.delete_schedule(
+                    mock_db, schedule_id, deleted_by, deleted_by_role
+                )
 
-    #         # 驗證 CRUD 層被正確呼叫
-    #         mock_delete.assert_called_once_with(
-    #             mock_db, schedule_id, deleted_by, deleted_by_role
-    #         )
+            # 驗證 CRUD 層被正確呼叫
+            mock_delete.assert_called_once_with(
+                mock_db, schedule_id, deleted_by, deleted_by_role
+            )
 
-    #         # 確認記錄了警告日誌
-    #         mock_logger.warning.assert_called_once_with(f"時段 {schedule_id} 不存在")
+            # 確認記錄了警告日誌
+            mock_logger.warning.assert_called_once_with(f"時段 {schedule_id} 不存在")
 
-    # @pytest.mark.parametrize(
-    #     "schedule_status,expected_status_value",
-    #     [
-    #         (ScheduleStatusEnum.ACCEPTED, "ACCEPTED"),
-    #         (ScheduleStatusEnum.COMPLETED, "COMPLETED"),
-    #     ],
-    # )
-    # @patch('app.services.schedule.logger')
-    # def test_delete_schedule_cannot_delete(
-    #     self, mock_logger, service, mock_db, schedule_status, expected_status_value
-    # ):
-    #     """測試刪除時段 - 無法刪除（狀態不允許）。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
-    #     deleted_by = 2
-    #     deleted_by_role = UserRoleEnum.GIVER
+    @pytest.mark.parametrize(
+        "schedule_status,expected_status_value",
+        [
+            (ScheduleStatusEnum.ACCEPTED, "ACCEPTED"),
+            (ScheduleStatusEnum.COMPLETED, "COMPLETED"),
+        ],
+    )
+    @patch('app.services.schedule.logger')
+    def test_delete_schedule_cannot_delete(
+        self, mock_logger, service, mock_db, schedule_status, expected_status_value
+    ):
+        """測試刪除時段 - 無法刪除（狀態不允許）。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        deleted_by = 2
+        deleted_by_role = UserRoleEnum.GIVER
 
-    #     # 建立模擬的時段（狀態不允許刪除）
-    #     mock_schedule = self.create_mock_schedule(
-    #         id=schedule_id,
-    #         status=schedule_status,
-    #     )
+        # 建立模擬的時段（狀態不允許刪除）
+        mock_schedule = self.create_mock_schedule(
+            id=schedule_id,
+            status=schedule_status,
+        )
 
-    #     # 模擬 CRUD 層刪除返回無法刪除結果
-    #     with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
-    #         mock_delete.return_value = DeletionResult.CANNOT_DELETE
+        # 模擬 CRUD 層刪除返回無法刪除結果
+        with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
+            mock_delete.return_value = DeletionResult.CANNOT_DELETE
 
-    #         # 模擬查詢時段（包含已刪除的）
-    #         with patch.object(
-    #             service.schedule_crud, 'get_schedule_including_deleted'
-    #         ) as mock_get:
-    #             mock_get.return_value = mock_schedule
+            # 模擬查詢時段（包含已刪除的）
+            with patch.object(
+                service.schedule_crud, 'get_schedule_including_deleted'
+            ) as mock_get:
+                mock_get.return_value = mock_schedule
 
-    #             # WHEN & THEN：確認拋出無法刪除錯誤
-    #             with pytest.raises(ScheduleCannotBeDeletedError):
-    #                 service.delete_schedule(
-    #                     mock_db, schedule_id, deleted_by, deleted_by_role
-    #                 )
+                # WHEN & THEN：確認拋出無法刪除錯誤
+                with pytest.raises(ScheduleCannotBeDeletedError):
+                    service.delete_schedule(
+                        mock_db, schedule_id, deleted_by, deleted_by_role
+                    )
 
-    #             # 驗證 CRUD 層被正確呼叫
-    #             mock_delete.assert_called_once_with(
-    #                 mock_db, schedule_id, deleted_by, deleted_by_role
-    #             )
-    #             mock_get.assert_called_once_with(mock_db, schedule_id)
+                # 驗證 CRUD 層被正確呼叫
+                mock_delete.assert_called_once_with(
+                    mock_db, schedule_id, deleted_by, deleted_by_role
+                )
+                mock_get.assert_called_once_with(mock_db, schedule_id)
 
-    #             # 確認記錄了警告日誌
-    #             mock_logger.warning.assert_called_once_with(
-    #                 f"時段 {schedule_id} 無法刪除，狀態不允許，當前狀態: {expected_status_value}"
-    #             )
+                # 確認記錄了警告日誌
+                mock_logger.warning.assert_called_once_with(
+                    f"時段 {schedule_id} 無法刪除，狀態不允許，當前狀態: {expected_status_value}"
+                )
 
-    # @patch('app.services.schedule.logger')
-    # def test_delete_schedule_already_deleted(self, mock_logger, service, mock_db):
-    #     """測試刪除時段 - 已經刪除。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
-    #     deleted_by = 2
-    #     deleted_by_role = UserRoleEnum.GIVER
+    @patch('app.services.schedule.logger')
+    def test_delete_schedule_already_deleted(self, mock_logger, service, mock_db):
+        """測試刪除時段 - 已經刪除。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        deleted_by = 2
+        deleted_by_role = UserRoleEnum.GIVER
 
-    #     # 模擬 CRUD 層刪除返回已經刪除結果
-    #     with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
-    #         # 設定模擬返回值
-    #         mock_delete.return_value = DeletionResult.ALREADY_DELETED
+        # 模擬 CRUD 層刪除返回已經刪除結果
+        with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
+            # 設定模擬返回值
+            mock_delete.return_value = DeletionResult.ALREADY_DELETED
 
-    #         # WHEN & THEN：確認拋出時段不存在錯誤
-    #         with pytest.raises(ScheduleNotFoundError):
-    #             service.delete_schedule(
-    #                 mock_db, schedule_id, deleted_by, deleted_by_role
-    #             )
+            # WHEN & THEN：確認拋出時段不存在錯誤
+            with pytest.raises(ScheduleNotFoundError):
+                service.delete_schedule(
+                    mock_db, schedule_id, deleted_by, deleted_by_role
+                )
 
-    #         # 驗證 CRUD 層被正確呼叫
-    #         mock_delete.assert_called_once_with(
-    #             mock_db, schedule_id, deleted_by, deleted_by_role
-    #         )
+            # 驗證 CRUD 層被正確呼叫
+            mock_delete.assert_called_once_with(
+                mock_db, schedule_id, deleted_by, deleted_by_role
+            )
 
-    #         # 確認記錄了警告日誌
-    #         mock_logger.warning.assert_called_once_with(f"時段 {schedule_id} 已經刪除")
+            # 確認記錄了警告日誌
+            mock_logger.warning.assert_called_once_with(f"時段 {schedule_id} 已經刪除")
 
-    # @patch('app.services.schedule.logger')
-    # def test_delete_schedule_unknown_result(self, mock_logger, service, mock_db):
-    #     """測試刪除時段 - 防禦性程式設計：處理未預期的刪除結果。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
-    #     deleted_by = 2
-    #     deleted_by_role = UserRoleEnum.GIVER
+    @patch('app.services.schedule.logger')
+    def test_delete_schedule_unknown_result(self, mock_logger, service, mock_db):
+        """測試刪除時段 - 防禦性程式設計：處理未預期的刪除結果。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        deleted_by = 2
+        deleted_by_role = UserRoleEnum.GIVER
 
-    #     # 使用不存在的枚舉值，模擬未知結果以觸發 case _: 分支
-    #     unknown_result = "UNKNOWN_RESULT"
+        # 使用不存在的枚舉值，模擬未知結果以觸發 case _: 分支
+        unknown_result = "UNKNOWN_RESULT"
 
-    #     # 模擬 CRUD 層刪除返回未知結果
-    #     with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
-    #         # 設定模擬返回值為未知結果
-    #         mock_delete.return_value = unknown_result
+        # 模擬 CRUD 層刪除返回未知結果
+        with patch.object(service.schedule_crud, 'delete_schedule') as mock_delete:
+            # 設定模擬返回值為未知結果
+            mock_delete.return_value = unknown_result
 
-    #         # WHEN & THEN：確認拋出業務邏輯錯誤
-    #         with pytest.raises(BusinessLogicError) as exc_info:
-    #             service.delete_schedule(
-    #                 mock_db, schedule_id, deleted_by, deleted_by_role
-    #             )
+            # WHEN & THEN：確認拋出業務邏輯錯誤
+            with pytest.raises(BusinessLogicError) as exc_info:
+                service.delete_schedule(
+                    mock_db, schedule_id, deleted_by, deleted_by_role
+                )
 
-    #         # 驗證錯誤訊息包含未知結果
-    #         assert "未知的刪除結果" in str(exc_info.value)
-    #         assert str(unknown_result) in str(exc_info.value)
+            # 驗證錯誤訊息包含未知結果
+            assert "未知的刪除結果" in str(exc_info.value)
+            assert str(unknown_result) in str(exc_info.value)
 
-    #         # 驗證 CRUD 層被正確呼叫
-    #         mock_delete.assert_called_once_with(
-    #             mock_db, schedule_id, deleted_by, deleted_by_role
-    #         )
+            # 驗證 CRUD 層被正確呼叫
+            mock_delete.assert_called_once_with(
+                mock_db, schedule_id, deleted_by, deleted_by_role
+            )
 
-    #         # 確認記錄了錯誤日誌
-    #         mock_logger.error.assert_called_once_with(
-    #             f"時段 {schedule_id} 刪除時發生未知錯誤: {unknown_result}"
-    #         )
+            # 確認記錄了錯誤日誌
+            mock_logger.error.assert_called_once_with(
+                f"時段 {schedule_id} 刪除時發生未知錯誤: {unknown_result}"
+            )
