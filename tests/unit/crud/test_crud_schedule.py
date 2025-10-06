@@ -15,7 +15,7 @@ from sqlalchemy.orm import joinedload, Session
 # ===== 本地模組 =====
 from app.crud.schedule import ScheduleCRUD
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
-from app.errors.exceptions import ScheduleNotFoundError
+from app.errors.exceptions import BadRequestError, ScheduleNotFoundError
 from app.models.schedule import Schedule
 from app.utils.timezone import get_local_now_naive
 
@@ -750,151 +750,189 @@ class TestScheduleCRUD:
         result = self.crud.get_schedule_including_deleted(db_session, 999)
         assert result is None
 
-    # # ===== 更新時段欄位 =====
-    # def test_update_schedule_fields_alias_schedule_date(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    # ):
-    #     """測試更新時段欄位：別名 schedule_date 處理。"""
-    #     # Given: 測試 schedule_date 別名（對應到模型的 date 欄位）
-    #     new_date = date(2024, 12, 31)
-    #     old_date = test_giver_schedule.date
+    # ===== 更新時段欄位 =====
+    def test_update_schedule_fields_alias_schedule_date(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+    ):
+        """測試更新時段欄位：別名 schedule_date 處理。"""
+        # Given: 測試 schedule_date 別名（對應到模型的 date 欄位）
+        new_date = date(2024, 12, 31)
+        old_date = test_giver_schedule.date
 
-    #     # When: 更新時段欄位
-    #     updated_fields = self.crud._update_schedule_fields(
-    #         test_giver_schedule,
-    #         schedule_date=new_date,
-    #     )
+        # When: 更新時段欄位
+        updated_fields = self.crud._update_schedule_fields(
+            test_giver_schedule,
+            schedule_date=new_date,
+        )
 
-    #     # Then: 驗證更新結果
-    #     assert len(updated_fields) == 1
-    #     assert f"date: {old_date} -> {new_date}" in updated_fields
-    #     assert test_giver_schedule.date == new_date
+        # Then: 驗證更新結果
+        assert len(updated_fields) == 1
+        assert f"date: {old_date} -> {new_date}" in updated_fields
+        assert test_giver_schedule.date == new_date
 
-    # def test_update_schedule_fields_existing_field(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    # ):
-    #     """測試更新時段欄位：存在的 Schedule 模型欄位。"""
-    #     # Given: 測試更新存在的欄位
-    #     old_note = test_giver_schedule.note
-    #     new_note = "更新後的備註"
-    #     old_status = test_giver_schedule.status
-    #     new_status = ScheduleStatusEnum.PENDING
+    @pytest.mark.parametrize(
+        "field,new_value",
+        [
+            ("status", ScheduleStatusEnum.PENDING),
+            ("start_time", time(11, 0)),
+            ("end_time", time(12, 0)),
+            ("note", "新的備註"),
+        ],
+    )
+    def test_update_schedule_fields_non_schedule_date_fields(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        field,
+        new_value,
+    ):
+        """參數化測試：更新非 schedule_date 相關欄位（status、start_time、end_time、note）。"""
+        # Given: 取得舊值
+        old_value = getattr(test_giver_schedule, field)
 
-    #     # When: 更新時段欄位
-    #     updated_fields = self.crud._update_schedule_fields(
-    #         test_giver_schedule,
-    #         note=new_note,
-    #         status=new_status,
-    #     )
+        # When: 單一欄位更新
+        updated_fields = self.crud._update_schedule_fields(
+            test_giver_schedule,
+            **{field: new_value},
+        )
 
-    #     # Then: 驗證更新結果
-    #     assert len(updated_fields) == 2
-    #     assert f"note: {old_note} -> {new_note}" in updated_fields
-    #     assert f"status: {old_status} -> {new_status}" in updated_fields
-    #     assert test_giver_schedule.note == new_note
-    #     assert test_giver_schedule.status == new_status
+        # Then: 僅有一個欄位被更新，內容與模型同步
+        assert len(updated_fields) == 1
+        assert f"{field}: {old_value} -> {new_value}" in updated_fields
+        assert getattr(test_giver_schedule, field) == new_value
 
-    # def test_update_schedule_fields_non_existing_field(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    #     caplog,
-    # ):
-    #     """測試更新時段欄位：不存在的 Schedule 模型欄位。"""
-    #     # Given: 測試更新不存在的欄位
+    def test_update_schedule_fields_non_existing_field(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        caplog,
+    ):
+        """測試更新時段欄位：不存在的 Schedule 模型欄位。"""
+        # Given: 測試更新不存在的欄位
 
-    #     # When: 更新時段欄位
-    #     updated_fields = self.crud._update_schedule_fields(
-    #         test_giver_schedule,
-    #         non_existing_field="無效值",
-    #         another_invalid_field=123,
-    #         invalid_column_name="測試",
-    #     )
+        # When: 更新時段欄位
+        updated_fields = self.crud._update_schedule_fields(
+            test_giver_schedule,
+            non_existing_field="無效值",
+        )
 
-    #     # Then: 所有欄位都不存在，應該返回空列表
-    #     assert len(updated_fields) == 0
+        # Then: 所有欄位都不存在，應該返回空列表
+        assert len(updated_fields) == 0
 
-    #     # Then: 驗證原始欄位值沒有改變，表示不存在的欄位被忽略
-    #     assert test_giver_schedule.giver_id == 1
-    #     assert test_giver_schedule.taker_id is None
-    #     assert test_giver_schedule.status == ScheduleStatusEnum.AVAILABLE
-    #     assert test_giver_schedule.date == date(2024, 1, 1)
-    #     assert test_giver_schedule.start_time == time(9, 0)
-    #     assert test_giver_schedule.end_time == time(10, 0)
-    #     assert test_giver_schedule.note == "Giver 提供的可預約時段"
+        # Then: 驗證原始欄位值沒有改變，表示不存在的欄位被忽略
+        assert test_giver_schedule.giver_id == 1
+        assert test_giver_schedule.taker_id is None
+        assert test_giver_schedule.status == ScheduleStatusEnum.AVAILABLE
+        assert test_giver_schedule.date == date(2024, 1, 1)
+        assert test_giver_schedule.start_time == time(9, 0)
+        assert test_giver_schedule.end_time == time(10, 0)
+        assert test_giver_schedule.note == "Giver 提供的可預約時段"
 
-    #     # Then: 驗證警告日誌被正確記錄
-    #     assert len(caplog.records) == 3  # 應該有3個警告記錄
-    #     assert caplog.records[0].levelname == "WARNING"
-    #     assert "忽略無效的欄位: non_existing_field" in caplog.records[0].message
-    #     assert caplog.records[1].levelname == "WARNING"
-    #     assert "忽略無效的欄位: another_invalid_field" in caplog.records[1].message
-    #     assert caplog.records[2].levelname == "WARNING"
-    #     assert "忽略無效的欄位: invalid_column_name" in caplog.records[2].message
+        # Then: 驗證警告日誌被正確記錄
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "WARNING"
+        assert "忽略無效的欄位: non_existing_field" in caplog.records[0].message
 
-    # # ===== 更新時段 =====
-    # def test_update_schedule_success(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    #     caplog,
-    # ):
-    #     """測試成功更新時段。"""
-    #     # Given: 使用夾具的時段資料
+    # ===== 更新時段 =====
+    def test_update_schedule_success(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        caplog,
+    ):
+        """測試成功更新時段。"""
+        # Given: 使用夾具的時段資料
 
-    #     # When: 更新時段
-    #     updated_schedule = self.crud.update_schedule(
-    #         db_session,
-    #         test_giver_schedule.id,
-    #         updated_by=test_giver_schedule.giver_id,
-    #         updated_by_role=UserRoleEnum.GIVER,
-    #         schedule_date=date(2025, 9, 16),
-    #         start_time=time(14, 0),
-    #         end_time=time(15, 0),
-    #         note="更新後的備註",
-    #     )
+        # When: 更新時段
+        updated_schedule = self.crud.update_schedule(
+            db_session,
+            test_giver_schedule.id,
+            updated_by=test_giver_schedule.giver_id,
+            updated_by_role=UserRoleEnum.GIVER,
+            schedule_date=date(2025, 9, 16),
+            start_time=time(14, 0),
+            end_time=time(15, 0),
+            note="更新後的備註",
+        )
 
-    #     # Then: 驗證資料完整性：未更新的欄位保持不變
-    #     assert updated_schedule.id == test_giver_schedule.id
-    #     assert updated_schedule.giver_id == test_giver_schedule.giver_id
-    #     assert updated_schedule.taker_id == test_giver_schedule.taker_id
-    #     assert updated_schedule.status == test_giver_schedule.status
+        # Then: 驗證資料完整性：未更新的欄位保持不變
+        assert updated_schedule.id == test_giver_schedule.id
+        assert updated_schedule.giver_id == test_giver_schedule.giver_id
+        assert updated_schedule.taker_id == test_giver_schedule.taker_id
+        assert updated_schedule.status == test_giver_schedule.status
 
-    #     # Then: 驗證更新欄位
-    #     assert updated_schedule.date == date(2025, 9, 16)
-    #     assert updated_schedule.start_time == time(14, 0)
-    #     assert updated_schedule.end_time == time(15, 0)
-    #     assert updated_schedule.note == "更新後的備註"
+        # Then: 驗證更新欄位
+        assert updated_schedule.date == date(2025, 9, 16)
+        assert updated_schedule.start_time == time(14, 0)
+        assert updated_schedule.end_time == time(15, 0)
+        assert updated_schedule.note == "更新後的備註"
 
-    #     # Then: 驗證業務邏輯
-    #     assert updated_schedule is not None
-    #     assert updated_schedule.updated_at is not None
-    #     assert updated_schedule.updated_by == test_giver_schedule.giver_id
-    #     assert updated_schedule.updated_by_role == UserRoleEnum.GIVER
+        # Then: 驗證業務邏輯
+        assert updated_schedule is not None
+        assert updated_schedule.updated_at is not None
+        assert updated_schedule.updated_by == test_giver_schedule.giver_id
+        assert updated_schedule.updated_by_role == UserRoleEnum.GIVER
 
-    # def test_update_schedule_not_found(
-    #     self,
-    #     db_session: Session,
-    #     test_giver_schedule: Schedule,
-    # ):
-    #     """測試更新時段：404 資源不存在錯誤。"""
-    #     # Given: 測試更新不存在的時段
+    @pytest.mark.parametrize(
+        "start_time,end_time,description",
+        [
+            # 測試開始時間等於結束時間的情況
+            (time(9, 0), time(9, 0), "開始時間等於結束時間"),
+            # 測試開始時間晚於結束時間的情況
+            (time(10, 0), time(9, 0), "開始時間晚於結束時間"),
+            (time(11, 30), time(10, 0), "開始時間晚於結束時間（不同分鐘）"),
+            (time(12, 0), time(11, 30), "開始時間晚於結束時間（跨小時）"),
+        ],
+    )
+    def test_update_schedule_time_validation_error(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+        start_time,
+        end_time,
+        description,
+    ):
+        """時間邏輯驗證錯誤（開始時間必須早於結束時間）。"""
+        # Given: 準備測試資料
+        schedule_id = test_giver_schedule.id
+        updated_by = 1
+        updated_by_role = UserRoleEnum.GIVER
 
-    #     # When: 更新時段
+        # When & Then: 驗證會拋出 BadRequestError
+        with pytest.raises(BadRequestError) as exc_info:
+            self.crud.update_schedule(
+                db_session,
+                schedule_id,
+                updated_by=updated_by,
+                updated_by_role=updated_by_role,
+                start_time=start_time,
+                end_time=end_time,
+            )
 
-    #     # Then: 應該拋出 ScheduleNotFoundError
-    #     with pytest.raises(ScheduleNotFoundError, match="時段不存在: ID=999"):
-    #         self.crud.update_schedule(
-    #             db_session,
-    #             999,
-    #             updated_by=test_giver_schedule.giver_id,
-    #             updated_by_role=UserRoleEnum.SYSTEM,
-    #             note="測試時段不存在",
-    #         )
+        # 驗證錯誤訊息
+        assert "開始時間必須早於結束時間" in str(exc_info.value)
+
+    def test_update_schedule_not_found(
+        self,
+        db_session: Session,
+        test_giver_schedule: Schedule,
+    ):
+        """測試更新時段：404 資源不存在錯誤。"""
+        # Given: 測試更新不存在的時段
+
+        # When: 更新時段
+
+        # Then: 應該拋出 ScheduleNotFoundError
+        with pytest.raises(ScheduleNotFoundError, match="時段不存在: ID=999"):
+            self.crud.update_schedule(
+                db_session,
+                999,
+                updated_by=test_giver_schedule.giver_id,
+                updated_by_role=UserRoleEnum.SYSTEM,
+                note="測試時段不存在",
+            )
 
     # # ===== 軟刪除時段 =====
     # def test_delete_schedule_success(
