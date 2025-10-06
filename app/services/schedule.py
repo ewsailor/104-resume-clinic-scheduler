@@ -172,7 +172,7 @@ class ScheduleService:
         # 逐一處理每個時段資料，轉換為 ORM 物件
         for schedule_data in schedules:
             # 根據建立者角色決定時段狀態
-            self.determine_schedule_status(created_by_role, schedule_data)
+            status = self.determine_schedule_status(created_by_role, schedule_data)
 
             # 建立時段 ORM 實體，將 Pydantic 模型轉換為 SQLAlchemy 模型
             schedule_orm = Schedule(
@@ -182,7 +182,7 @@ class ScheduleService:
                 start_time=schedule_data.start_time,
                 end_time=schedule_data.end_time,
                 note=schedule_data.note,
-                status=schedule_data.status,
+                status=status,
                 created_by=created_by,
                 created_by_role=created_by_role,
                 updated_by=created_by,
