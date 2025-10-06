@@ -700,103 +700,249 @@ class TestScheduleService:
                             mock_db, schedules, created_by, created_by_role
                         )
 
-    # # ===== 查詢時段列表 =====
-    # @patch('app.services.schedule.logger')
-    # def test_list_schedules_success(self, mock_logger, service, mock_db):
-    #     """測試查詢時段列表 - 成功。"""
-    #     # GIVEN：建立模擬的時段列表
-    #     giver_id = 1
-    #     taker_id = None
-    #     status_filter = None
+    # ===== 查詢時段列表 =====
+    @patch('app.services.schedule.logger')
+    def test_list_schedules_success(self, mock_logger, service, mock_db):
+        """測試查詢時段列表 - 無使用篩選條件 - 成功。"""
+        # GIVEN：建立模擬的時段列表（所有篩選條件都為 None）
+        giver_id = None
+        taker_id = None
+        status_filter = None
 
-    #     mock_schedules = [
-    #         self.create_mock_schedule(
-    #             id=1,
-    #             giver_id=1,
-    #             taker_id=2,
-    #             date=date(2024, 1, 15),
-    #             start_time=time(9, 0),
-    #             end_time=time(10, 0),
-    #             status=ScheduleStatusEnum.AVAILABLE,
-    #         ),
-    #         self.create_mock_schedule(
-    #             id=2,
-    #             giver_id=1,
-    #             taker_id=3,
-    #             date=date(2024, 1, 16),
-    #             start_time=time(14, 0),
-    #             end_time=time(15, 0),
-    #             status=ScheduleStatusEnum.PENDING,
-    #         ),
-    #     ]
+        mock_schedules = [
+            self.create_mock_schedule(
+                id=1,
+                giver_id=1,
+                taker_id=2,
+                date=date(2024, 1, 15),
+                start_time=time(9, 0),
+                end_time=time(10, 0),
+                status=ScheduleStatusEnum.AVAILABLE,
+            ),
+            self.create_mock_schedule(
+                id=2,
+                giver_id=1,
+                taker_id=3,
+                date=date(2024, 1, 16),
+                start_time=time(14, 0),
+                end_time=time(15, 0),
+                status=ScheduleStatusEnum.PENDING,
+            ),
+        ]
 
-    #     # 模擬 CRUD 層查詢返回時段列表
-    #     with patch.object(service.schedule_crud, 'list_schedules') as mock_list:
-    #         # 設定模擬返回值
-    #         mock_list.return_value = mock_schedules
+        # 模擬 CRUD 層查詢返回時段列表
+        with patch.object(service.schedule_crud, 'list_schedules') as mock_list:
+            # 設定模擬返回值
+            mock_list.return_value = mock_schedules
 
-    #         # WHEN：查詢時段列表
-    #         result = service.list_schedules(mock_db, giver_id, taker_id, status_filter)
+            # WHEN：查詢時段列表
+            result = service.list_schedules(mock_db, giver_id, taker_id, status_filter)
 
-    #         # THEN：驗證 CRUD 層被正確呼叫
-    #         mock_list.assert_called_once_with(
-    #             mock_db, giver_id, taker_id, status_filter
-    #         )
+            # THEN：驗證 CRUD 層被正確呼叫
+            mock_list.assert_called_once_with(
+                mock_db, giver_id, taker_id, status_filter
+            )
 
-    #         # 確認查詢成功
-    #         assert result == mock_schedules
-    #         assert len(result) == 2
+            # 確認查詢成功
+            assert result == mock_schedules
+            assert len(result) == 2
 
-    #         # 確認記錄了查詢日誌
-    #         mock_logger.info.assert_called_once_with(
-    #             f"查詢時段列表完成: giver_id={giver_id}, taker_id={taker_id}, "
-    #             f"status_filter={status_filter}, 找到 {len(mock_schedules)} 個時段"
-    #         )
+            # 確認記錄了查詢日誌
+            mock_logger.info.assert_called_once_with(
+                f"查詢時段列表完成: giver_id={giver_id}, taker_id={taker_id}, "
+                f"status_filter={status_filter}, 找到 {len(mock_schedules)} 個時段"
+            )
 
-    # @patch('app.services.schedule.logger')
-    # def test_list_schedules_with_filters(self, mock_logger, service, mock_db):
-    #     """測試查詢時段列表 - 使用篩選條件。"""
-    #     # GIVEN：建立模擬的時段列表
-    #     giver_id = 1
-    #     taker_id = 2
-    #     status_filter = "AVAILABLE"
+    @patch('app.services.schedule.logger')
+    @pytest.mark.parametrize(
+        "giver_id,taker_id,status_filter,expected_count",
+        [
+            # 單一篩選條件
+            (1, None, None, 2),  # 只篩選 giver_id (時段1,2)
+            (None, 2, None, 2),  # 只篩選 taker_id (時段1,3)
+            (None, None, "AVAILABLE", 1),  # 只篩選 status (時段1)
+            (None, None, "PENDING", 2),  # 只篩選 status (時段2,3)
+            # 多重篩選條件
+            (1, 2, None, 1),  # giver_id + taker_id (時段1)
+            (1, None, "AVAILABLE", 1),  # giver_id + status (時段1)
+            (None, 2, "PENDING", 1),  # taker_id + status (時段3)
+            (1, 2, "AVAILABLE", 1),  # 所有篩選條件 (時段1)
+        ],
+    )
+    def test_list_schedules_with_filters(
+        self,
+        mock_logger,
+        service,
+        mock_db,
+        giver_id,
+        taker_id,
+        status_filter,
+        expected_count,
+    ):
+        """測試查詢時段列表 - 使用篩選條件 - 成功。"""
+        # GIVEN：建立模擬的時段列表
+        mock_schedules = [
+            self.create_mock_schedule(
+                id=1,
+                giver_id=1,
+                taker_id=2,
+                date=date(2024, 1, 15),
+                start_time=time(9, 0),
+                end_time=time(10, 0),
+                status=ScheduleStatusEnum.AVAILABLE,
+            ),
+            self.create_mock_schedule(
+                id=2,
+                giver_id=1,
+                taker_id=3,
+                date=date(2024, 1, 16),
+                start_time=time(14, 0),
+                end_time=time(15, 0),
+                status=ScheduleStatusEnum.PENDING,
+            ),
+            self.create_mock_schedule(
+                id=3,
+                giver_id=2,
+                taker_id=2,
+                date=date(2024, 1, 17),
+                start_time=time(16, 0),
+                end_time=time(17, 0),
+                status=ScheduleStatusEnum.PENDING,
+            ),
+        ]
 
-    #     mock_schedules = [
-    #         self.create_mock_schedule(
-    #             id=1,
-    #             giver_id=1,
-    #             taker_id=2,
-    #             date=date(2024, 1, 15),
-    #             start_time=time(9, 0),
-    #             end_time=time(10, 0),
-    #             status=ScheduleStatusEnum.AVAILABLE,
-    #         ),
-    #     ]
+        # 根據篩選條件篩選模擬資料
+        filtered_schedules = []
+        for schedule in mock_schedules:
+            match = True  # 預設匹配，只要有任何條件不符合就設為 False
 
-    #     # 模擬 CRUD 層查詢返回時段列表
-    #     with patch.object(service.schedule_crud, 'list_schedules') as mock_list:
-    #         # 設定模擬返回值
-    #         mock_list.return_value = mock_schedules
+            # 檢查 giver_id 篩選條件：如果指定了 giver_id 但時段的 giver_id 不匹配，則不符合
+            if giver_id is not None and schedule.giver_id != giver_id:
+                match = False
 
-    #         # WHEN：查詢時段列表（使用所有篩選條件）
-    #         result = service.list_schedules(
-    #             mock_db, giver_id=1, taker_id=2, status_filter="AVAILABLE"
-    #         )
+            # 檢查 taker_id 篩選條件：如果指定了 taker_id 但時段的 taker_id 不匹配，則不符合
+            if taker_id is not None and schedule.taker_id != taker_id:
+                match = False
 
-    #         # THEN：確認 CRUD 層被正確呼叫
-    #         mock_list.assert_called_once_with(
-    #             mock_db, giver_id, taker_id, status_filter
-    #         )
+            # 檢查 status 篩選條件：如果指定了 status 但時段的狀態不匹配，則不符合
+            if status_filter is not None and schedule.status.value != status_filter:
+                match = False
 
-    #         # 確認查詢成功
-    #         assert result == mock_schedules
-    #         assert len(result) == 1
+            # 如果所有篩選條件都符合，則將時段加入結果列表
+            if match:
+                filtered_schedules.append(schedule)
 
-    #         # 確認記錄了查詢日誌
-    #         mock_logger.info.assert_called_once_with(
-    #             f"查詢時段列表完成: giver_id={giver_id}, taker_id={taker_id}, "
-    #             f"status_filter={status_filter}, 找到 {len(mock_schedules)} 個時段"
-    #         )
+        # 模擬 CRUD 層查詢返回時段列表
+        with patch.object(service.schedule_crud, 'list_schedules') as mock_list:
+            # 設定模擬返回值
+            mock_list.return_value = filtered_schedules
+
+            # WHEN：查詢時段列表（使用篩選條件）
+            result = service.list_schedules(mock_db, giver_id, taker_id, status_filter)
+
+            # THEN：確認 CRUD 層被正確呼叫
+            mock_list.assert_called_once_with(
+                mock_db, giver_id, taker_id, status_filter
+            )
+
+            # 確認查詢成功
+            assert result == filtered_schedules
+            assert len(result) == expected_count
+
+            # 確認記錄了查詢日誌
+            mock_logger.info.assert_called_once_with(
+                f"查詢時段列表完成: giver_id={giver_id}, taker_id={taker_id}, "
+                f"status_filter={status_filter}, 找到 {len(filtered_schedules)} 個時段"
+            )
+
+    @patch('app.services.schedule.logger')
+    @pytest.mark.parametrize(
+        "giver_id,taker_id,status_filter,error_message",
+        [
+            # 無效的 giver_id
+            (-1, None, None, "無效的 giver_id"),
+            (0, None, None, "無效的 giver_id"),
+            # 無效的 taker_id
+            (None, -1, None, "無效的 taker_id"),
+            (None, 0, None, "無效的 taker_id"),
+            # 無效的 status_filter
+            (None, None, "INVALID_STATUS", "無效的狀態篩選條件"),
+            (None, None, "", "無效的狀態篩選條件"),
+            (None, None, "invalid_status", "無效的狀態篩選條件"),
+            # 多重無效參數
+            (-1, -1, "INVALID_STATUS", "無效的篩選參數"),
+        ],
+    )
+    def test_list_schedules_invalid_parameters(
+        self,
+        mock_logger,
+        service,
+        mock_db,
+        giver_id,
+        taker_id,
+        status_filter,
+        error_message,
+    ):
+        """測試查詢時段列表 - 無效的篩選參數。"""
+        # GIVEN：準備測試參數（包含無效的篩選條件）
+
+        # 模擬 CRUD 層拋出驗證錯誤
+        with patch.object(service.schedule_crud, 'list_schedules') as mock_list:
+            # 設定模擬拋出異常
+            mock_list.side_effect = ValueError(error_message)
+
+            # WHEN & THEN：確認拋出資料庫錯誤（會被裝飾器轉換為 DatabaseError）
+            with pytest.raises(DatabaseError):
+                service.list_schedules(mock_db, giver_id, taker_id, status_filter)
+
+            # 確認 CRUD 層被正確呼叫
+            mock_list.assert_called_once_with(
+                mock_db, giver_id, taker_id, status_filter
+            )
+
+    @patch('app.services.schedule.logger')
+    @pytest.mark.parametrize(
+        "giver_id,taker_id,status_filter,error_message",
+        [
+            # 單一參數組合的 CRUD 錯誤
+            (1, None, None, "資料庫操作失敗"),
+            (None, 2, None, "資料庫操作失敗"),
+            (None, None, "AVAILABLE", "資料庫操作失敗"),
+            # 多重參數組合的 CRUD 錯誤
+            (1, 2, None, "資料庫操作失敗"),
+            (1, None, "PENDING", "資料庫操作失敗"),
+            (None, 2, "AVAILABLE", "資料庫操作失敗"),
+            (1, 2, "AVAILABLE", "資料庫操作失敗"),
+            # 無篩選條件的 CRUD 錯誤
+            (None, None, None, "資料庫操作失敗"),
+        ],
+    )
+    def test_list_schedules_crud_error(
+        self,
+        mock_logger,
+        service,
+        mock_db,
+        giver_id,
+        taker_id,
+        status_filter,
+        error_message,
+    ):
+        """測試查詢時段列表 - CRUD 層錯誤。"""
+        # GIVEN：準備測試參數
+
+        # 模擬 CRUD 層拋出資料庫錯誤
+        with patch.object(service.schedule_crud, 'list_schedules') as mock_list:
+            # 設定模擬拋出異常
+            mock_list.side_effect = Exception(error_message)
+
+            # WHEN & THEN：確認拋出資料庫錯誤（會被裝飾器轉換為 DatabaseError）
+            with pytest.raises(DatabaseError):
+                service.list_schedules(mock_db, giver_id, taker_id, status_filter)
+
+            # 確認 CRUD 層被正確呼叫
+            mock_list.assert_called_once_with(
+                mock_db, giver_id, taker_id, status_filter
+            )
 
     # # ===== 查詢單一時段 =====
     # @patch('app.services.schedule.logger')
