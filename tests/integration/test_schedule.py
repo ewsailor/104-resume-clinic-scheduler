@@ -329,88 +329,88 @@ class TestScheduleRoutes:
         assert "msg" in error_detail
         assert "input" in error_detail
 
-    # # ===== 取得單一時段 =====
-    # def test_get_schedule_success(self, client, schedule_in_db):
-    #     """測試取得單一時段 - 成功（200）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
-    #     schedule_id = schedule_in_db.id
+    # ===== 取得單一時段 =====
+    def test_get_schedule_success(self, client, schedule_in_db):
+        """測試取得單一時段 - 成功（200）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
+        schedule_id = schedule_in_db.id
 
-    #     # WHEN：呼叫取得單一時段 API
-    #     response = client.get(f"/api/v1/schedules/{schedule_id}")
+        # WHEN：呼叫取得單一時段 API
+        response = client.get(f"/api/v1/schedules/{schedule_id}")
 
-    #     # THEN：確認取得成功
-    #     assert response.status_code == status.HTTP_200_OK
-    #     data = response.json()
-    #     assert isinstance(data, dict)  # 單一時段返回字典，不是列表
+        # THEN：確認取得成功
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, dict)  # 單一時段返回字典，不是列表
 
-    #     # 驗證回傳資料的格式和內容
-    #     # 基本欄位
-    #     assert data["id"] == schedule_id
-    #     assert data["giver_id"] == 1
-    #     assert data["taker_id"] is None  # 夾具沒有設定 taker_id
-    #     assert data["status"] == "DRAFT"  # 預設狀態
-    #     assert data["date"] == "2024-12-25"
-    #     assert data["start_time"] == "09:00:00"
-    #     assert data["end_time"] == "10:00:00"
-    #     assert data["note"] == "資料庫中的時段資料"
+        # 驗證回傳資料的格式和內容
+        # 基本欄位
+        assert data["id"] == schedule_id
+        assert data["giver_id"] == 1
+        assert data["taker_id"] is None  # 夾具沒有設定 taker_id
+        assert data["status"] == "DRAFT"  # 預設狀態
+        assert data["date"] == "2024-12-25"
+        assert data["start_time"] == "09:00:00"
+        assert data["end_time"] == "10:00:00"
+        assert data["note"] == "資料庫中的時段資料"
 
-    #     # 審計欄位
-    #     assert "created_at" in data
-    #     assert "created_by" in data
-    #     assert "created_by_role" in data
-    #     assert "updated_at" in data
-    #     assert "updated_by" in data
-    #     assert "updated_by_role" in data
+        # 審計欄位
+        assert "created_at" in data
+        assert "created_by" in data
+        assert "created_by_role" in data
+        assert "updated_at" in data
+        assert "updated_by" in data
+        assert "updated_by_role" in data
 
-    #     # 系統欄位（軟刪除）
-    #     assert "deleted_at" in data
-    #     assert "deleted_by" in data
-    #     assert "deleted_by_role" in data
+        # 系統欄位（軟刪除）
+        assert "deleted_at" in data
+        assert "deleted_by" in data
+        assert "deleted_by_role" in data
 
-    # def test_get_schedule_not_found(self, client):
-    #     """測試取得單一時段 - 時段不存在（404）。"""
-    #     # GIVEN：不存在的時段 ID
+    def test_get_schedule_not_found(self, client):
+        """測試取得單一時段 - 時段不存在（404）。"""
+        # GIVEN：不存在的時段 ID
 
-    #     # WHEN：呼叫取得單一時段 API
-    #     response = client.get("/api/v1/schedules/99999")
+        # WHEN：呼叫取得單一時段 API
+        response = client.get("/api/v1/schedules/99999")
 
-    #     # THEN：確認返回找不到錯誤
-    #     assert response.status_code == status.HTTP_404_NOT_FOUND
-    #     data = response.json()
-    #     assert "error" in data
+        # THEN：確認返回找不到錯誤
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        data = response.json()
+        assert "error" in data
 
-    #     # 驗證錯誤回應的完整格式
-    #     error = data["error"]
-    #     assert "時段不存在" in data["error"]["message"]
-    #     assert error["message"] == "時段不存在: ID=99999"
-    #     assert error["status_code"] == 404
-    #     assert error["code"] == "SERVICE_SCHEDULE_NOT_FOUND"
-    #     assert "timestamp" in error
-    #     assert "details" in error
+        # 驗證錯誤回應的完整格式
+        error = data["error"]
+        assert "時段不存在" in data["error"]["message"]
+        assert error["message"] == "時段不存在: ID=99999"
+        assert error["status_code"] == 404
+        assert error["code"] == "SERVICE_SCHEDULE_NOT_FOUND"
+        assert "timestamp" in error
+        assert "details" in error
 
-    # def test_get_schedule_validation_error(self, client):
-    #     """測試取得單一時段 - 參數驗證錯誤（422）。"""
-    #     # GIVEN：無效的時段 ID（必須大於 0）
+    def test_get_schedule_validation_error(self, client):
+        """測試取得單一時段 - 參數驗證錯誤（422）。"""
+        # GIVEN：無效的時段 ID（必須大於 0）
 
-    #     # WHEN：使用無效的時段 ID 呼叫 API
-    #     response = client.get("/api/v1/schedules/0")
+        # WHEN：使用無效的時段 ID 呼叫 API
+        response = client.get("/api/v1/schedules/0")
 
-    #     # THEN：確認返回驗證錯誤
-    #     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    #     data = response.json()
-    #     assert "detail" in data
+        # THEN：確認返回驗證錯誤
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        data = response.json()
+        assert "detail" in data
 
-    #     # 驗證 422 錯誤的完整格式
-    #     detail = data["detail"]
-    #     assert isinstance(detail, list)
-    #     assert len(detail) > 0
+        # 驗證 422 錯誤的完整格式
+        detail = data["detail"]
+        assert isinstance(detail, list)
+        assert len(detail) > 0
 
-    #     # 驗證錯誤詳情的結構
-    #     error_detail = detail[0]
-    #     assert "type" in error_detail
-    #     assert "loc" in error_detail
-    #     assert "msg" in error_detail
-    #     assert "input" in error_detail
+        # 驗證錯誤詳情的結構
+        error_detail = detail[0]
+        assert "type" in error_detail
+        assert "loc" in error_detail
+        assert "msg" in error_detail
+        assert "input" in error_detail
 
     # # ===== 更新時段 =====
     # def test_update_schedule_success(
