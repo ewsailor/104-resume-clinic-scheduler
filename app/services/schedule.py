@@ -19,18 +19,13 @@ from app.decorators import (
     log_operation,
 )
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
-from app.enums.operations import OperationContext  # , DeletionResult
-from app.errors import (  # # create_schedule_cannot_be_deleted_error,
-    create_business_logic_error,
-    create_schedule_not_found_error,
+from app.enums.operations import OperationContext
+from app.errors import (
     create_schedule_overlap_error,
 )
 from app.errors.exceptions import ScheduleNotFoundError
 from app.models.schedule import Schedule
 from app.schemas import ScheduleBase
-
-# from typing import Any
-
 
 # 建立日誌記錄器：可在日誌中看到訊息從哪個模組來，利於除錯與維運
 logger = logging.getLogger(__name__)

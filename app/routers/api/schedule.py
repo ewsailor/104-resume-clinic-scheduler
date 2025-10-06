@@ -12,7 +12,7 @@ from app.database import get_db
 from app.decorators import handle_api_errors_async
 from app.enums.models import ScheduleStatusEnum
 from app.errors import create_bad_request_error
-from app.schemas import (  # ScheduleDeleteRequest,; SchedulePartialUpdateRequest,
+from app.schemas import (
     ScheduleCreateRequest,
     ScheduleResponse,
 )
