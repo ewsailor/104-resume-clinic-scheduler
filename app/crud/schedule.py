@@ -15,6 +15,7 @@ from sqlalchemy.orm import joinedload, Session
 from app.enums.models import ScheduleStatusEnum, UserRoleEnum
 from app.enums.operations import DeletionResult
 from app.errors import (
+    create_bad_request_error,
     create_schedule_not_found_error,
 )
 from app.models.schedule import Schedule
@@ -185,70 +186,70 @@ class ScheduleCRUD:
 
         return schedule
 
-    # def _update_schedule_fields(
-    #     self,
-    #     schedule: Schedule,
-    #     **kwargs: Any,
-    # ) -> list[str]:
-    #     """更新時段欄位並返回更新的欄位記錄。"""
-    #     updated_fields = []
+    def _update_schedule_fields(
+        self,
+        schedule: Schedule,
+        **kwargs: Any,
+    ) -> list[str]:
+        """更新時段欄位並返回更新的欄位記錄。"""
+        updated_fields = []
 
-    #     for field, value in kwargs.items():
-    #         # 檢查 API 傳入的參數名稱，是否為 schedule_date 別名，如果是則更新資料庫模型 date 欄位的值
-    #         if field == "schedule_date":
-    #             # 取得欄位更新前的舊值（如果不存在則為 None）
-    #             old_value = getattr(schedule, "date", None)
-    #             # 設定欄位的新值到資料庫模型的 date 屬性
-    #             setattr(schedule, "date", value)
-    #             # 記錄欄位變更日誌：格式為 "欄位名: 舊值 -> 新值"
-    #             updated_fields.append(f"date: {old_value} -> {value}")
-    #         # 檢查欄位是否在 Schedule 模型中存在
-    #         elif hasattr(schedule, field):
-    #             # 取得欄位更新前的舊值（如果不存在則為 None）
-    #             old_value = getattr(schedule, field, None)
-    #             # 設定欄位的新值到資料庫模型
-    #             setattr(schedule, field, value)
-    #             # 記錄欄位變更日誌：格式為 "欄位名: 舊值 -> 新值"
-    #             updated_fields.append(f"{field}: {old_value} -> {value}")
-    #         # 如果欄位不存在於 Schedule 模型中
-    #         else:
-    #             # 記錄警告日誌，忽略無效的欄位
-    #             logger.warning(f"忽略無效的欄位: {field}")
+        for field, value in kwargs.items():
+            # 檢查 API 傳入的參數名稱，是否為 schedule_date 別名，如果是則更新資料庫模型 date 欄位的值
+            if field == "schedule_date":
+                # 取得欄位更新前的舊值（如果不存在則為 None）
+                old_value = getattr(schedule, "date", None)
+                # 設定欄位的新值到資料庫模型的 date 屬性
+                setattr(schedule, "date", value)
+                # 記錄欄位變更日誌：格式為 "欄位名: 舊值 -> 新值"
+                updated_fields.append(f"date: {old_value} -> {value}")
+            # 檢查欄位是否在 Schedule 模型中存在
+            elif hasattr(schedule, field):
+                # 取得欄位更新前的舊值（如果不存在則為 None）
+                old_value = getattr(schedule, field, None)
+                # 設定欄位的新值到資料庫模型
+                setattr(schedule, field, value)
+                # 記錄欄位變更日誌：格式為 "欄位名: 舊值 -> 新值"
+                updated_fields.append(f"{field}: {old_value} -> {value}")
+            # 如果欄位不存在於 Schedule 模型中
+            else:
+                # 記錄警告日誌，忽略無效的欄位
+                logger.warning(f"忽略無效的欄位: {field}")
 
-    #     return updated_fields
+        return updated_fields
 
-    # def update_schedule(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    #     updated_by: int,
-    #     updated_by_role: UserRoleEnum,
-    #     **kwargs: Any,
-    # ) -> Schedule:
-    #     """更新時段。"""
-    #     # 驗證時段是否存在
-    #     schedule = self.get_schedule(db, schedule_id)
+    def update_schedule(
+        self,
+        db: Session,
+        schedule_id: int,
+        updated_by: int,
+        updated_by_role: UserRoleEnum,
+        **kwargs: Any,
+    ) -> Schedule:
+        """更新時段。"""
+        # 驗證時段是否存在
+        schedule = self.get_schedule(db, schedule_id)
 
-    #     # 驗證時間邏輯（只有在更新時間欄位時才檢查）
-    #     if "start_time" in kwargs or "end_time" in kwargs:
-    #         start_time = kwargs.get("start_time", schedule.start_time)
-    #         end_time = kwargs.get("end_time", schedule.end_time)
+        # 驗證時間邏輯（只有在更新時間欄位時才檢查）
+        if "start_time" in kwargs or "end_time" in kwargs:
+            start_time = kwargs.get("start_time", schedule.start_time)
+            end_time = kwargs.get("end_time", schedule.end_time)
 
-    #         if start_time and end_time and start_time >= end_time:
-    #             raise create_bad_request_error("開始時間必須早於結束時間")
+            if start_time and end_time and start_time >= end_time:
+                raise create_bad_request_error("開始時間必須早於結束時間")
 
-    #     # 只有當時段存在時，才設定更新者資訊
-    #     if updated_by is not None:
-    #         schedule.updated_by = updated_by  # type: ignore
-    #     if updated_by_role is not None:
-    #         schedule.updated_by_role = updated_by_role  # type: ignore
+        # 只有當時段存在時，才設定更新者資訊
+        if updated_by is not None:
+            schedule.updated_by = updated_by  # type: ignore
+        if updated_by_role is not None:
+            schedule.updated_by_role = updated_by_role  # type: ignore
 
-    #     self._update_schedule_fields(schedule, **kwargs)
+        self._update_schedule_fields(schedule, **kwargs)
 
-    #     db.commit()
-    #     db.refresh(schedule)
+        db.commit()
+        db.refresh(schedule)
 
-    #     return schedule
+        return schedule
 
     def delete_schedule(
         self,

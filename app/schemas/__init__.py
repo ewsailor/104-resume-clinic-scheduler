@@ -10,18 +10,20 @@
 """
 
 # ===== 本地模組 =====
-from .schedule import (  # ScheduleDeleteRequest,; SchedulePartialUpdateRequest,; ScheduleUpdateBase,
+from .schedule import (  # ScheduleDeleteRequest,
     ScheduleBase,
     ScheduleCreateRequest,
+    SchedulePartialUpdateRequest,
     ScheduleResponse,
+    ScheduleUpdateBase,
 )
 
 __all__ = [
     # 時段相關模式
     "ScheduleBase",
     "ScheduleCreateRequest",
-    # "ScheduleUpdateBase",
-    # "SchedulePartialUpdateRequest",
+    "ScheduleUpdateBase",
+    "SchedulePartialUpdateRequest",
     # "ScheduleDeleteRequest",
     "ScheduleResponse",
 ]

@@ -12,8 +12,9 @@ from app.database import get_db
 from app.decorators import handle_api_errors_async
 from app.enums.models import ScheduleStatusEnum
 from app.errors import create_bad_request_error
-from app.schemas import (
+from app.schemas import (  # ScheduleDeleteRequest,
     ScheduleCreateRequest,
+    SchedulePartialUpdateRequest,
     ScheduleResponse,
 )
 from app.services import schedule_service
@@ -369,167 +370,167 @@ async def get_schedule(
     return ScheduleResponse.model_validate(schedule)
 
 
-# @router.patch(
-#     "/schedules/{schedule_id}",
-#     response_model=ScheduleResponse,
-#     status_code=status.HTTP_200_OK,
-#     summary="部分更新時段",
-#     description="""
-# ## 功能簡介
-# - 部分更新時段資訊，只更新提供的欄位
+@router.patch(
+    "/schedules/{schedule_id}",
+    response_model=ScheduleResponse,
+    status_code=status.HTTP_200_OK,
+    summary="部分更新時段",
+    description="""
+## 功能簡介
+- 部分更新時段資訊，只更新提供的欄位
 
-# ### 使用場景
-# - Giver 編輯尚未公開給 Taker 預約的諮詢時間，以利因應行程變動
-# - Taker 編輯尚未送出給 Giver 的諮詢時間，以利因應行程變動
-# - 系統管理員調整時段資訊
+### 使用場景
+- Giver 編輯尚未公開給 Taker 預約的諮詢時間，以利因應行程變動
+- Taker 編輯尚未送出給 Giver 的諮詢時間，以利因應行程變動
+- 系統管理員調整時段資訊
 
-# ### 路徑參數
-# - **schedule_id**: 時段 ID（必填，必須大於 0）
+### 路徑參數
+- **schedule_id**: 時段 ID（必填，必須大於 0）
 
-# ### 回應狀態
-# - **200 OK**: 成功更新時段
-# - **400 Bad Request**: 更新資料無效
-# - **404 Not Found**: 時段不存在錯誤
-# - **409 Conflict**: 時段衝突錯誤
-# - **422 Unprocessable Entity**: 參數驗證錯誤
-#     """,
-#     responses={
-#         200: {
-#             "description": "成功更新時段",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "id": 1,
-#                         "giver_id": 1,
-#                         "taker_id": 1,
-#                         "status": "PENDING",
-#                         "date": "2024-01-01",
-#                         "start_time": "09:00:00",
-#                         "end_time": "10:00:00",
-#                         "note": "成功更新時段",
-#                         "created_at": "2024-01-01T00:00:00Z",
-#                         "created_by": 1,
-#                         "created_by_role": "TAKER",
-#                         "updated_at": "2024-01-01T09:00:00Z",
-#                         "updated_by": 1,
-#                         "updated_by_role": "TAKER",
-#                         "deleted_at": "null",
-#                         "deleted_by": "null",
-#                         "deleted_by_role": "null",
-#                     }
-#                 }
-#             },
-#         },
-#         400: {
-#             "description": "更新資料錯誤",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "error": {
-#                             "message": "更新資料錯誤",
-#                             "status_code": 400,
-#                             "code": "ROUTER_BAD_REQUEST",
-#                             "timestamp": "2024-01-01T00:00:00Z",
-#                             "details": {},
-#                         }
-#                     }
-#                 }
-#             },
-#         },
-#         404: {
-#             "description": "時段不存在錯誤（Service 拋出錯誤，由 Route 捕捉）",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "error": {
-#                             "message": "時段不存在: ID=schedule_id",
-#                             "status_code": 404,
-#                             "code": "SERVICE_SCHEDULE_NOT_FOUND",
-#                             "timestamp": "2024-01-01T00:00:00Z",
-#                             "details": {},
-#                         }
-#                     }
-#                 }
-#             },
-#         },
-#         409: {
-#             "description": "時段衝突錯誤（Service 拋出錯誤，由 Route 捕捉）",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "error": {
-#                             "message": "更新時段 ID=schedule_id 時，檢測到 {len(overlapping_schedules)} 個重疊時段，請調整時段之時間",
-#                             "status_code": 409,
-#                             "code": "SERVICE_SCHEDULE_OVERLAP",
-#                             "timestamp": "2024-01-01T00:00:00Z",
-#                             "details": {
-#                                 "overlapping_schedules": [
-#                                     {
-#                                         "id": 1,
-#                                         "giver_id": 1,
-#                                         "date": "2024-01-01",
-#                                         "start_time": "08:00:00",
-#                                         "end_time": "12:00:00",
-#                                         "status": "AVAILABLE",
-#                                     }
-#                                 ]
-#                             },
-#                         }
-#                     }
-#                 }
-#             },
-#         },
-#         422: {
-#             "description": "參數驗證錯誤",
-#             "content": {
-#                 "application/json": {
-#                     "example": {
-#                         "detail": [
-#                             {
-#                                 "type": "validation_error_type",
-#                                 "loc": ["path", "to", "field"],
-#                                 "msg": "具體錯誤訊息",
-#                                 "input": "無效的輸入值",
-#                                 "ctx": {"error": "錯誤上下文"},
-#                             }
-#                         ]
-#                     }
-#                 }
-#             },
-#         },
-#     },
-# )
-# @handle_api_errors_async()
-# async def update_schedule(
-#     request: SchedulePartialUpdateRequest,
-#     schedule_id: int = Path(..., gt=0, description="時段 ID，必填，必須大於 0"),
-#     db: Session = Depends(get_db),
-# ) -> ScheduleResponse:
-#     """部分更新時段：只更新提供的欄位。
+### 回應狀態
+- **200 OK**: 成功更新時段
+- **400 Bad Request**: 更新資料無效
+- **404 Not Found**: 時段不存在錯誤
+- **409 Conflict**: 時段衝突錯誤
+- **422 Unprocessable Entity**: 參數驗證錯誤
+    """,
+    responses={
+        200: {
+            "description": "成功更新時段",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "giver_id": 1,
+                        "taker_id": 1,
+                        "status": "PENDING",
+                        "date": "2024-01-01",
+                        "start_time": "09:00:00",
+                        "end_time": "10:00:00",
+                        "note": "成功更新時段",
+                        "created_at": "2024-01-01T00:00:00Z",
+                        "created_by": 1,
+                        "created_by_role": "TAKER",
+                        "updated_at": "2024-01-01T09:00:00Z",
+                        "updated_by": 1,
+                        "updated_by_role": "TAKER",
+                        "deleted_at": "null",
+                        "deleted_by": "null",
+                        "deleted_by_role": "null",
+                    }
+                }
+            },
+        },
+        400: {
+            "description": "更新資料錯誤",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "message": "更新資料錯誤",
+                            "status_code": 400,
+                            "code": "ROUTER_BAD_REQUEST",
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "details": {},
+                        }
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "時段不存在錯誤（Service 拋出錯誤，由 Route 捕捉）",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "message": "時段不存在: ID=schedule_id",
+                            "status_code": 404,
+                            "code": "SERVICE_SCHEDULE_NOT_FOUND",
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "details": {},
+                        }
+                    }
+                }
+            },
+        },
+        409: {
+            "description": "時段衝突錯誤（Service 拋出錯誤，由 Route 捕捉）",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "message": "更新時段 ID=schedule_id 時，檢測到 {len(overlapping_schedules)} 個重疊時段，請調整時段之時間",
+                            "status_code": 409,
+                            "code": "SERVICE_SCHEDULE_OVERLAP",
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "details": {
+                                "overlapping_schedules": [
+                                    {
+                                        "id": 1,
+                                        "giver_id": 1,
+                                        "date": "2024-01-01",
+                                        "start_time": "08:00:00",
+                                        "end_time": "12:00:00",
+                                        "status": "AVAILABLE",
+                                    }
+                                ]
+                            },
+                        }
+                    }
+                }
+            },
+        },
+        422: {
+            "description": "參數驗證錯誤",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "type": "validation_error_type",
+                                "loc": ["path", "to", "field"],
+                                "msg": "具體錯誤訊息",
+                                "input": "無效的輸入值",
+                                "ctx": {"error": "錯誤上下文"},
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+    },
+)
+@handle_api_errors_async()
+async def update_schedule(
+    request: SchedulePartialUpdateRequest,
+    schedule_id: int = Path(..., gt=0, description="時段 ID，必填，必須大於 0"),
+    db: Session = Depends(get_db),
+) -> ScheduleResponse:
+    """部分更新時段：只更新提供的欄位。
 
-#     Args:
-#         request (SchedulePartialUpdateRequest): 更新請求資料。
-#         schedule_id (int): 時段 ID，必填，必須大於 0。
-#         db (Session): 資料庫會話。
+    Args:
+        request (SchedulePartialUpdateRequest): 更新請求資料。
+        schedule_id (int): 時段 ID，必填，必須大於 0。
+        db (Session): 資料庫會話。
 
-#     Returns:
-#         ScheduleResponse: 更新後的時段資訊。
-#     """
-#     # 將 Pydantic 模型的物件，轉換為字典格式，只包含非 None 的欄位，避免把「空值」也更新到資料庫
-#     # 使用 by_alias=True 來獲得別名形式的字典，這樣 date 欄位會以別名形式出現
-#     update_data = request.schedule.model_dump(by_alias=True, exclude_none=True)
-#     # 處理 date 欄位的別名 - 將 date 轉換為 schedule_date，以符合資料庫或後端函式期望的欄位名稱
-#     if "date" in update_data:
-#         update_data["schedule_date"] = update_data.pop("date")
+    Returns:
+        ScheduleResponse: 更新後的時段資訊。
+    """
+    # 將 Pydantic 模型的物件，轉換為字典格式，只包含非 None 的欄位，避免把「空值」也更新到資料庫
+    # 使用 by_alias=True 來獲得別名形式的字典，這樣 date 欄位會以別名形式出現
+    update_data = request.schedule.model_dump(by_alias=True, exclude_none=True)
+    # 處理 date 欄位的別名 - 將 date 轉換為 schedule_date，以符合資料庫或後端函式期望的欄位名稱
+    if "date" in update_data:
+        update_data["schedule_date"] = update_data.pop("date")
 
-#     schedule = schedule_service.update_schedule(
-#         db,
-#         schedule_id,
-#         updated_by=request.updated_by,
-#         updated_by_role=request.updated_by_role,
-#         **update_data,  # 字典解包：傳遞更新資料
-#     )
-#     return ScheduleResponse.model_validate(schedule)
+    schedule = schedule_service.update_schedule(
+        db,
+        schedule_id,
+        updated_by=request.updated_by,
+        updated_by_role=request.updated_by_role,
+        **update_data,  # 字典解包：傳遞更新資料
+    )
+    return ScheduleResponse.model_validate(schedule)
 
 
 # @router.delete(

@@ -61,42 +61,42 @@ class ScheduleBase(BaseModel):
     )
 
 
-# class ScheduleUpdateBase(BaseModel):
-#     """部分更新時段的基礎模型 - 所有欄位都是可選的。"""
+class ScheduleUpdateBase(BaseModel):
+    """部分更新時段的基礎模型 - 所有欄位都是可選的。"""
 
-#     giver_id: int | None = Field(
-#         None, description="Giver ID", gt=0, json_schema_extra={"example": 1}
-#     )
-#     taker_id: int | None = Field(
-#         None, description="Taker ID", gt=0, json_schema_extra={"example": 2}
-#     )
-#     status: ScheduleStatusEnum | None = Field(
-#         default=None,
-#         description="時段狀態（可選，如果不傳此欄位則不更新狀態，如果傳 null 則會拋出驗證錯誤）",
-#         json_schema_extra={"example": ScheduleStatusEnum.PENDING},
-#     )
-#     schedule_date: date | None = Field(
-#         None,
-#         description="時段日期",
-#         alias="date",
-#         json_schema_extra={"example": "2024-01-01"},
-#     )
-#     start_time: time | None = Field(
-#         None,
-#         description="開始時間",
-#         json_schema_extra={"example": "14:00:00"},
-#     )
-#     end_time: time | None = Field(
-#         None,
-#         description="結束時間",
-#         json_schema_extra={"example": "15:00:00"},
-#     )
-#     note: str | None = Field(
-#         None,
-#         description="備註",
-#         max_length=255,
-#         json_schema_extra={"example": "下週要面試，希望能請教面試技巧"},
-#     )
+    giver_id: int | None = Field(
+        None, description="Giver ID", gt=0, json_schema_extra={"example": 1}
+    )
+    taker_id: int | None = Field(
+        None, description="Taker ID", gt=0, json_schema_extra={"example": 2}
+    )
+    status: ScheduleStatusEnum | None = Field(
+        default=None,
+        description="時段狀態（可選，如果不傳此欄位則不更新狀態，如果傳 null 則會拋出驗證錯誤）",
+        json_schema_extra={"example": ScheduleStatusEnum.PENDING},
+    )
+    schedule_date: date | None = Field(
+        None,
+        description="時段日期",
+        alias="date",
+        json_schema_extra={"example": "2024-01-01"},
+    )
+    start_time: time | None = Field(
+        None,
+        description="開始時間",
+        json_schema_extra={"example": "14:00:00"},
+    )
+    end_time: time | None = Field(
+        None,
+        description="結束時間",
+        json_schema_extra={"example": "15:00:00"},
+    )
+    note: str | None = Field(
+        None,
+        description="備註",
+        max_length=255,
+        json_schema_extra={"example": "下週要面試，希望能請教面試技巧"},
+    )
 
 
 # ===== 請求模型 =====
@@ -141,32 +141,32 @@ class ScheduleCreateRequest(BaseModel):
     )
 
 
-# class SchedulePartialUpdateRequest(BaseModel):
-#     """部分更新時段的 API 請求模型。"""
+class SchedulePartialUpdateRequest(BaseModel):
+    """部分更新時段的 API 請求模型。"""
 
-#     schedule: ScheduleUpdateBase = Field(
-#         ...,
-#         description="要更新的時段資料",
-#         json_schema_extra={
-#             "example": {
-#                 "giver_id": 1,
-#                 "taker_id": 2,
-#                 "status": "PENDING",
-#                 "date": "2024-01-01",
-#                 "start_time": "16:00:00",
-#                 "end_time": "17:00:00",
-#                 "note": "時段部分更新",
-#             }
-#         },
-#     )
-#     updated_by: int = Field(
-#         ..., description="最後更新者的 ID", gt=0, json_schema_extra={"example": 1}
-#     )
-#     updated_by_role: UserRoleEnum = Field(
-#         ...,
-#         description="最後更新者的角色",
-#         json_schema_extra={"example": UserRoleEnum.TAKER},
-#     )
+    schedule: ScheduleUpdateBase = Field(
+        ...,
+        description="要更新的時段資料",
+        json_schema_extra={
+            "example": {
+                "giver_id": 1,
+                "taker_id": 2,
+                "status": "PENDING",
+                "date": "2024-01-01",
+                "start_time": "16:00:00",
+                "end_time": "17:00:00",
+                "note": "時段部分更新",
+            }
+        },
+    )
+    updated_by: int = Field(
+        ..., description="最後更新者的 ID", gt=0, json_schema_extra={"example": 1}
+    )
+    updated_by_role: UserRoleEnum = Field(
+        ...,
+        description="最後更新者的角色",
+        json_schema_extra={"example": UserRoleEnum.TAKER},
+    )
 
 
 # class ScheduleDeleteRequest(BaseModel):

@@ -7,6 +7,7 @@ from datetime import date, time
 
 # ===== 標準函式庫 =====
 import logging
+from typing import Any
 
 # ===== 第三方套件 =====
 from sqlalchemy import and_
@@ -277,98 +278,98 @@ class ScheduleService:
 
         return schedule
 
-    # def new_updated_time_values(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    #     **kwargs: Any,
-    # ) -> tuple[date, time, time]:
-    #     """更新後的時間值。"""
-    #     # 取得現有時段的資訊，用於比較和預設值
-    #     schedule = self.schedule_crud.get_schedule(db, schedule_id)
+    def new_updated_time_values(
+        self,
+        db: Session,
+        schedule_id: int,
+        **kwargs: Any,
+    ) -> tuple[date, time, time]:
+        """更新後的時間值。"""
+        # 取得現有時段的資訊，用於比較和預設值
+        schedule = self.schedule_crud.get_schedule(db, schedule_id)
 
-    #     # 取得更新後的時間值：如果沒有提供新值，則使用現有值
-    #     new_date = kwargs.get("schedule_date", schedule.date)
-    #     new_start_time = kwargs.get("start_time", schedule.start_time)
-    #     new_end_time = kwargs.get("end_time", schedule.end_time)
+        # 取得更新後的時間值：如果沒有提供新值，則使用現有值
+        new_date = kwargs.get("schedule_date", schedule.date)
+        new_start_time = kwargs.get("start_time", schedule.start_time)
+        new_end_time = kwargs.get("end_time", schedule.end_time)
 
-    #     return new_date, new_start_time, new_end_time
+        return new_date, new_start_time, new_end_time
 
-    # def _needs_overlap_check(self, **kwargs: Any) -> bool:
-    #     """檢查是否需要進行重疊檢查。
+    def _needs_overlap_check(self, **kwargs: Any) -> bool:
+        """檢查是否需要進行重疊檢查。
 
-    #     只有更新時間相關欄位（日期、開始時間或結束時間）才需要檢查重疊。
-    #     """
-    #     time_related_fields = ["schedule_date", "start_time", "end_time"]
-    #     return any(field in kwargs for field in time_related_fields)
+        只有更新時間相關欄位（日期、開始時間或結束時間）才需要檢查重疊。
+        """
+        time_related_fields = ["schedule_date", "start_time", "end_time"]
+        return any(field in kwargs for field in time_related_fields)
 
-    # def check_update_overlap(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    #     **kwargs: Any,
-    # ) -> list[Schedule]:
-    #     """檢查更新時段時的重疊情況。"""
-    #     # 如果沒有更新時間相關欄位，則不需要檢查重疊
-    #     if not self._needs_overlap_check(**kwargs):
-    #         return []
+    def check_update_overlap(
+        self,
+        db: Session,
+        schedule_id: int,
+        **kwargs: Any,
+    ) -> list[Schedule]:
+        """檢查更新時段時的重疊情況。"""
+        # 如果沒有更新時間相關欄位，則不需要檢查重疊
+        if not self._needs_overlap_check(**kwargs):
+            return []
 
-    #     # 取得現有時段資訊和更新後的時間值
-    #     schedule = self.schedule_crud.get_schedule(db, schedule_id)
-    #     new_date, new_start_time, new_end_time = self.new_updated_time_values(
-    #         db, schedule_id, **kwargs
-    #     )
+        # 取得現有時段資訊和更新後的時間值
+        schedule = self.schedule_crud.get_schedule(db, schedule_id)
+        new_date, new_start_time, new_end_time = self.new_updated_time_values(
+            db, schedule_id, **kwargs
+        )
 
-    #     # 更新時段時排除自己，避免查詢結果「和自己重疊」造成誤判
-    #     overlapping_schedules = self.check_schedule_overlap(
-    #         db=db,
-    #         giver_id=int(schedule.giver_id),
-    #         schedule_date=new_date,
-    #         start_time=new_start_time,
-    #         end_time=new_end_time,
-    #         exclude_schedule_id=schedule_id,
-    #     )
+        # 更新時段時排除自己，避免查詢結果「和自己重疊」造成誤判
+        overlapping_schedules = self.check_schedule_overlap(
+            db=db,
+            giver_id=int(schedule.giver_id),
+            schedule_date=new_date,
+            start_time=new_start_time,
+            end_time=new_end_time,
+            exclude_schedule_id=schedule_id,
+        )
 
-    #     return overlapping_schedules
+        return overlapping_schedules
 
-    # @handle_service_errors_sync("更新時段")
-    # @log_operation("更新時段")
-    # def update_schedule(
-    #     self,
-    #     db: Session,
-    #     schedule_id: int,
-    #     updated_by: int,
-    #     updated_by_role: UserRoleEnum,
-    #     **kwargs: Any,
-    # ) -> Schedule:
-    #     """更新時段。"""
-    #     # 檢查更新時是否會造成時段重疊
-    #     overlapping_schedules = self.check_update_overlap(db, schedule_id, **kwargs)
+    @handle_service_errors_sync("更新時段")
+    @log_operation("更新時段")
+    def update_schedule(
+        self,
+        db: Session,
+        schedule_id: int,
+        updated_by: int,
+        updated_by_role: UserRoleEnum,
+        **kwargs: Any,
+    ) -> Schedule:
+        """更新時段。"""
+        # 檢查更新時是否會造成時段重疊
+        overlapping_schedules = self.check_update_overlap(db, schedule_id, **kwargs)
 
-    #     # 如果發現重疊，記錄警告並拋出錯誤阻止更新
-    #     if overlapping_schedules:
-    #         logger.warning(
-    #             f"更新時段 {schedule_id} 時檢測到重疊: "
-    #             f"重疊數量={len(overlapping_schedules)}, "
-    #             f"更新者={updated_by}, 角色={updated_by_role.value}"
-    #         )
-    #         error_msg = f"更新時段 {schedule_id} 時，檢測到 {len(overlapping_schedules)} 個重疊時段，請調整時段之時間"
-    #         raise create_schedule_overlap_error(error_msg, overlapping_schedules)
+        # 如果發現重疊，記錄警告並拋出錯誤阻止更新
+        if overlapping_schedules:
+            logger.warning(
+                f"更新時段 {schedule_id} 時檢測到重疊: "
+                f"重疊數量={len(overlapping_schedules)}, "
+                f"更新者={updated_by}, 角色={updated_by_role.value}"
+            )
+            error_msg = f"更新時段 {schedule_id} 時，檢測到 {len(overlapping_schedules)} 個重疊時段，請調整時段之時間"
+            raise create_schedule_overlap_error(error_msg, overlapping_schedules)
 
-    #     # 呼叫 CRUD 層進行實際的資料庫更新操作
-    #     updated_schedule = self.schedule_crud.update_schedule(
-    #         db=db,
-    #         schedule_id=schedule_id,
-    #         updated_by=updated_by,
-    #         updated_by_role=updated_by_role,
-    #         **kwargs,
-    #     )
+        # 呼叫 CRUD 層進行實際的資料庫更新操作
+        updated_schedule = self.schedule_crud.update_schedule(
+            db=db,
+            schedule_id=schedule_id,
+            updated_by=updated_by,
+            updated_by_role=updated_by_role,
+            **kwargs,
+        )
 
-    #     logger.info(
-    #         f"時段 {schedule_id} 更新成功，更新者: {updated_by} (角色: {updated_by_role.value})"
-    #     )
+        logger.info(
+            f"時段 {schedule_id} 更新成功，更新者: {updated_by} (角色: {updated_by_role.value})"
+        )
 
-    #     return updated_schedule
+        return updated_schedule
 
     # @handle_service_errors_sync("軟刪除時段")
     # @log_operation("軟刪除時段")
