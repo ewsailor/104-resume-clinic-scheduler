@@ -1007,117 +1007,279 @@ class TestScheduleService:
             with pytest.raises(ScheduleNotFoundError):
                 service.get_schedule(mock_db, schedule_id)
 
-    # # ===== 更新時段 =====
-    # @patch('app.services.schedule.logger')
-    # def test_update_schedule_success(self, mock_logger, service, mock_db):
-    #     """測試更新時段 - 成功。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
-    #     updated_by = 2
-    #     updated_by_role = UserRoleEnum.GIVER
+    # ===== 更新時段 =====
+    @pytest.mark.parametrize(
+        "update_data,expected_date,expected_start_time,expected_end_time,description",
+        [
+            # 有提供更新值的情況
+            (
+                {
+                    "schedule_date": date(2024, 1, 20),
+                    "start_time": time(10, 0),
+                    "end_time": time(11, 0),
+                },
+                date(2024, 1, 20),
+                time(10, 0),
+                time(11, 0),
+                "全部時間欄位都有更新值",
+            ),
+            (
+                {"schedule_date": date(2024, 1, 20)},
+                date(2024, 1, 20),
+                time(9, 0),  # 使用現有值
+                time(10, 0),  # 使用現有值
+                "只有日期有更新值",
+            ),
+            (
+                {"start_time": time(10, 0)},
+                date(2024, 1, 15),  # 使用現有值
+                time(10, 0),
+                time(10, 0),  # 使用現有值
+                "只有開始時間有更新值",
+            ),
+            (
+                {"end_time": time(11, 0)},
+                date(2024, 1, 15),  # 使用現有值
+                time(9, 0),  # 使用現有值
+                time(11, 0),
+                "只有結束時間有更新值",
+            ),
+            # 無提供更新值的情況
+            (
+                {},
+                date(2024, 1, 15),  # 使用現有值
+                time(9, 0),  # 使用現有值
+                time(10, 0),  # 使用現有值
+                "沒有提供任何時間更新值",
+            ),
+            (
+                {"note": "只更新備註"},
+                date(2024, 1, 15),  # 使用現有值
+                time(9, 0),  # 使用現有值
+                time(10, 0),  # 使用現有值
+                "只有非時間欄位有更新值",
+            ),
+        ],
+    )
+    def test_new_updated_time_values(
+        self,
+        service,
+        mock_db,
+        update_data,
+        expected_date,
+        expected_start_time,
+        expected_end_time,
+        description,
+    ):
+        """測試取得更新後的時間值 - 參數化測試。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
 
-    #     # 更新前的時段資料（原始狀態）
-    #     original_schedule_data = {
-    #         "schedule_date": date(2024, 1, 15),
-    #         "start_time": time(9, 0),
-    #         "end_time": time(10, 0),
-    #         "note": "原始備註",
-    #     }
+        # 模擬現有時段
+        existing_schedule = Mock()
+        existing_schedule.id = schedule_id
+        existing_schedule.date = date(2024, 1, 15)
+        existing_schedule.start_time = time(9, 0)
+        existing_schedule.end_time = time(10, 0)
 
-    #     # 更新後的時段資料（要更新的內容）
-    #     update_data = {
-    #         "schedule_date": date(2024, 1, 16),  # 更新：日期從 15 改為 16
-    #         "start_time": time(10, 0),  # 更新：開始時間從 9:00 改為 10:00
-    #         "end_time": time(11, 0),  # 更新：結束時間從 10:00 改為 11:00
-    #         "note": "更新後的備註",  # 更新：備註內容改變
-    #     }
+        # 模擬 CRUD 層查詢
+        with patch.object(service.schedule_crud, 'get_schedule') as mock_get_schedule:
+            mock_get_schedule.return_value = existing_schedule
 
-    #     # 建立模擬的更新後時段
-    #     mock_updated_schedule = self.create_mock_schedule(
-    #         id=schedule_id,
-    #         giver_id=1,
-    #         taker_id=2,
-    #         date=update_data["schedule_date"],  # 使用更新後的日期
-    #         start_time=update_data["start_time"],  # 使用更新後的開始時間
-    #         end_time=update_data["end_time"],  # 使用更新後的結束時間
-    #         note=update_data["note"],  # 使用更新後的備註
-    #         status=ScheduleStatusEnum.AVAILABLE,
-    #     )
+            # WHEN：執行時間值處理
+            result_date, result_start_time, result_end_time = (
+                service.new_updated_time_values(mock_db, schedule_id, **update_data)
+            )
 
-    #     # 模擬重疊檢查：返回空列表表示沒有重疊
-    #     with patch.object(service, 'check_update_overlap', return_value=[]):
-    #         # 模擬 CRUD 層更新：返回更新後的時段
-    #         with patch.object(service.schedule_crud, 'update_schedule') as mock_update:
-    #             # 設定模擬返回值
-    #             mock_update.return_value = mock_updated_schedule
+            # THEN：驗證結果
+            assert result_date == expected_date
+            assert result_start_time == expected_start_time
+            assert result_end_time == expected_end_time
 
-    #             # WHEN：更新時段
-    #             result = service.update_schedule(
-    #                 mock_db, schedule_id, updated_by, updated_by_role, **update_data
-    #             )
+            # 驗證 CRUD 層被正確呼叫
+            mock_get_schedule.assert_called_once_with(mock_db, schedule_id)
 
-    #             # THEN：驗證重疊檢查被正確呼叫
-    #             service.check_update_overlap.assert_called_once_with(
-    #                 mock_db, schedule_id, **update_data
-    #             )
+    @pytest.mark.parametrize(
+        "kwargs,expected_result,description",
+        [
+            # 測試時間相關欄位 - 應該觸發重疊檢查
+            ({"schedule_date": date(2024, 1, 15)}, True, "只更新日期"),
+            ({"start_time": time(9, 0)}, True, "只更新開始時間"),
+            ({"end_time": time(10, 0)}, True, "只更新結束時間"),
+            (
+                {"schedule_date": date(2024, 1, 15), "start_time": time(9, 0)},
+                True,
+                "更新日期和開始時間",
+            ),
+            (
+                {"schedule_date": date(2024, 1, 15), "end_time": time(10, 0)},
+                True,
+                "更新日期和結束時間",
+            ),
+            (
+                {"start_time": time(9, 0), "end_time": time(10, 0)},
+                True,
+                "更新開始時間和結束時間",
+            ),
+            (
+                {
+                    "schedule_date": date(2024, 1, 15),
+                    "start_time": time(9, 0),
+                    "end_time": time(10, 0),
+                },
+                True,
+                "更新所有時間相關欄位",
+            ),
+            # 測試非時間相關欄位 - 不應該觸發重疊檢查
+            ({"giver_id": 1}, False, "只更新給與者ID"),
+            ({"status": "active"}, False, "只更新狀態"),
+            ({"notes": "測試備註"}, False, "只更新備註"),
+            # 測試混合欄位 - 只要包含時間相關欄位就應該觸發重疊檢查
+            (
+                {"schedule_date": date(2024, 1, 15), "giver_id": 1},
+                True,
+                "更新日期和給與者ID",
+            ),
+            (
+                {"start_time": time(9, 0), "status": "active"},
+                True,
+                "更新開始時間和狀態",
+            ),
+            (
+                {"end_time": time(10, 0), "notes": "測試備註"},
+                True,
+                "更新結束時間和備註",
+            ),
+            (
+                {"schedule_date": date(2024, 1, 15), "giver_id": 1, "status": "active"},
+                True,
+                "更新日期、給與者ID和狀態",
+            ),
+            # 測試空參數
+            ({}, False, "無參數"),
+        ],
+    )
+    def test_needs_overlap_check(self, service, kwargs, expected_result, description):
+        """測試 _needs_overlap_check 方法。
 
-    #             # 驗證 CRUD 層被正確呼叫
-    #             mock_update.assert_called_once_with(
-    #                 db=mock_db,
-    #                 schedule_id=schedule_id,
-    #                 updated_by=updated_by,
-    #                 updated_by_role=updated_by_role,
-    #                 **update_data,
-    #             )
+        驗證只有更新時間相關欄位（日期、開始時間或結束時間）才需要檢查重疊。
+        """
+        # WHEN：呼叫 _needs_overlap_check 方法
+        result = service._needs_overlap_check(**kwargs)
 
-    #             # 確認更新成功
-    #             assert result == mock_updated_schedule
+        # THEN：驗證結果
+        assert result == expected_result
 
-    #             # 確認記錄了更新成功日誌
-    #             mock_logger.info.assert_any_call(
-    #                 f"時段 {schedule_id} 更新成功，更新者: {updated_by} (角色: {updated_by_role.value})"
-    #             )
+    @patch('app.services.schedule.logger')
+    def test_update_schedule_success(self, mock_logger, service, mock_db):
+        """測試更新時段 - 成功。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        updated_by = 2
+        updated_by_role = UserRoleEnum.GIVER
 
-    # @patch('app.services.schedule.logger')
-    # def test_update_schedule_overlap_error(self, mock_logger, service, mock_db):
-    #     """測試更新時段 - 重疊錯誤。"""
-    #     # GIVEN：準備測試資料
-    #     schedule_id = 1
-    #     updated_by = 2
-    #     updated_by_role = UserRoleEnum.GIVER
+        # 更新前的時段資料（原始狀態）
+        original_schedule_data = {
+            "schedule_date": date(2024, 1, 15),
+            "start_time": time(9, 0),
+            "end_time": time(10, 0),
+            "note": "原始備註",
+        }
 
-    #     # 要更新的時段資料（會與現有時段重疊）
-    #     update_data = {
-    #         "schedule_date": date(2024, 1, 16),  # 更新到新日期
-    #         "start_time": time(10, 0),  # 更新開始時間
-    #         "end_time": time(11, 0),  # 更新結束時間
-    #     }
+        # 更新後的時段資料（要更新的內容）
+        update_data = {
+            "schedule_date": date(2024, 1, 16),  # 更新：日期從 15 改為 16
+            "start_time": time(10, 0),  # 更新：開始時間從 9:00 改為 10:00
+            "end_time": time(11, 0),  # 更新：結束時間從 10:00 改為 11:00
+            "note": "更新後的備註",  # 更新：備註內容改變
+        }
 
-    #     # 建立模擬的現有重疊時段（資料庫中已存在的時段）
-    #     mock_overlapping_schedule = self.create_mock_schedule(
-    #         id=2,  # 不同的時段 ID
-    #         giver_id=1,  # 同一個 Giver
-    #         date=date(2024, 1, 16),  # 同一個日期
-    #         start_time=time(9, 30),  # 重疊：9:30-10:30 與 10:00-11:00 重疊
-    #         end_time=time(10, 30),
-    #     )
+        # 建立模擬的更新後時段
+        mock_updated_schedule = self.create_mock_schedule(
+            id=schedule_id,
+            giver_id=1,
+            taker_id=2,
+            date=update_data["schedule_date"],  # 使用更新後的日期
+            start_time=update_data["start_time"],  # 使用更新後的開始時間
+            end_time=update_data["end_time"],  # 使用更新後的結束時間
+            note=update_data["note"],  # 使用更新後的備註
+            status=ScheduleStatusEnum.AVAILABLE,
+        )
 
-    #     # 模擬重疊檢查：返回重疊時段
-    #     with patch.object(
-    #         service, 'check_update_overlap', return_value=[mock_overlapping_schedule]
-    #     ):
-    #         # WHEN & THEN：當檢測到重疊時段時，拋出錯誤並阻止建立
-    #         with pytest.raises(ScheduleOverlapError):
-    #             service.update_schedule(
-    #                 mock_db, schedule_id, updated_by, updated_by_role, **update_data
-    #             )
+        # 模擬重疊檢查：返回空列表表示沒有重疊
+        with patch.object(service, 'check_update_overlap', return_value=[]):
+            # 模擬 CRUD 層更新：返回更新後的時段
+            with patch.object(service.schedule_crud, 'update_schedule') as mock_update:
+                # 設定模擬返回值
+                mock_update.return_value = mock_updated_schedule
 
-    #         # 確認記錄了警告日誌
-    #         mock_logger.warning.assert_called_with(
-    #             f"更新時段 {schedule_id} 時檢測到重疊: "
-    #             f"重疊數量={len([mock_overlapping_schedule])}, "
-    #             f"更新者={updated_by}, 角色={updated_by_role.value}"
-    #         )
+                # WHEN：更新時段
+                result = service.update_schedule(
+                    mock_db, schedule_id, updated_by, updated_by_role, **update_data
+                )
+
+                # THEN：驗證重疊檢查被正確呼叫
+                service.check_update_overlap.assert_called_once_with(
+                    mock_db, schedule_id, **update_data
+                )
+
+                # 驗證 CRUD 層被正確呼叫
+                mock_update.assert_called_once_with(
+                    db=mock_db,
+                    schedule_id=schedule_id,
+                    updated_by=updated_by,
+                    updated_by_role=updated_by_role,
+                    **update_data,
+                )
+
+                # 確認更新成功
+                assert result == mock_updated_schedule
+
+                # 確認記錄了更新成功日誌
+                mock_logger.info.assert_any_call(
+                    f"時段 {schedule_id} 更新成功，更新者: {updated_by} (角色: {updated_by_role.value})"
+                )
+
+    @patch('app.services.schedule.logger')
+    def test_update_schedule_overlap_error(self, mock_logger, service, mock_db):
+        """測試更新時段 - 重疊錯誤。"""
+        # GIVEN：準備測試資料
+        schedule_id = 1
+        updated_by = 2
+        updated_by_role = UserRoleEnum.GIVER
+
+        # 要更新的時段資料（會與現有時段重疊）
+        update_data = {
+            "schedule_date": date(2024, 1, 16),  # 更新到新日期
+            "start_time": time(10, 0),  # 更新開始時間
+            "end_time": time(11, 0),  # 更新結束時間
+        }
+
+        # 建立模擬的現有重疊時段（資料庫中已存在的時段）
+        mock_overlapping_schedule = self.create_mock_schedule(
+            id=2,  # 不同的時段 ID
+            giver_id=1,  # 同一個 Giver
+            date=date(2024, 1, 16),  # 同一個日期
+            start_time=time(9, 30),  # 重疊：9:30-10:30 與 10:00-11:00 重疊
+            end_time=time(10, 30),
+        )
+
+        # 模擬重疊檢查：返回重疊時段
+        with patch.object(
+            service, 'check_update_overlap', return_value=[mock_overlapping_schedule]
+        ):
+            # WHEN & THEN：當檢測到重疊時段時，拋出錯誤並阻止建立
+            with pytest.raises(ScheduleOverlapError):
+                service.update_schedule(
+                    mock_db, schedule_id, updated_by, updated_by_role, **update_data
+                )
+
+            # 確認記錄了警告日誌
+            mock_logger.warning.assert_called_with(
+                f"更新時段 {schedule_id} 時檢測到重疊: "
+                f"重疊數量={len([mock_overlapping_schedule])}, "
+                f"更新者={updated_by}, 角色={updated_by_role.value}"
+            )
 
     # # ===== 刪除時段 =====
     # @patch('app.services.schedule.logger')
