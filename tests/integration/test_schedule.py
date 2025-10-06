@@ -213,121 +213,121 @@ class TestScheduleRoutes:
         assert "msg" in error_detail
         assert "input" in error_detail
 
-    # # ===== 查詢時段列表 =====
-    # def test_list_schedules_success(self, client, schedule_in_db):
-    #     """測試查詢時段列表 - 成功（200）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
+    # ===== 查詢時段列表 =====
+    def test_list_schedules_success(self, client, schedule_in_db):
+        """測試查詢時段列表 - 成功（200）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
 
-    #     # WHEN：呼叫查詢時段列表 API
-    #     response = client.get("/api/v1/schedules")
+        # WHEN：呼叫查詢時段列表 API
+        response = client.get("/api/v1/schedules")
 
-    #     # THEN：確認查詢成功
-    #     assert response.status_code == status.HTTP_200_OK
-    #     data = response.json()
-    #     assert isinstance(data, list)
-    #     assert len(data) == 1
+        # THEN：確認查詢成功
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 1
 
-    #     # 驗證回傳資料的格式和內容
-    #     schedule_data = data[0]
+        # 驗證回傳資料的格式和內容
+        schedule_data = data[0]
 
-    #     # 基本欄位
-    #     assert "id" in schedule_data
-    #     assert schedule_data["giver_id"] == 1
-    #     assert schedule_data["taker_id"] is None  # 夾具沒有設定 taker_id
-    #     assert schedule_data["status"] == "DRAFT"  # 預設狀態
-    #     assert schedule_data["date"] == "2024-12-25"
-    #     assert schedule_data["start_time"] == "09:00:00"
-    #     assert schedule_data["end_time"] == "10:00:00"
-    #     assert schedule_data["note"] == "資料庫中的時段資料"
+        # 基本欄位
+        assert "id" in schedule_data
+        assert schedule_data["giver_id"] == 1
+        assert schedule_data["taker_id"] is None  # 夾具沒有設定 taker_id
+        assert schedule_data["status"] == "DRAFT"  # 預設狀態
+        assert schedule_data["date"] == "2024-12-25"
+        assert schedule_data["start_time"] == "09:00:00"
+        assert schedule_data["end_time"] == "10:00:00"
+        assert schedule_data["note"] == "資料庫中的時段資料"
 
-    #     # 審計欄位
-    #     assert "created_at" in schedule_data
-    #     assert "created_by" in schedule_data
-    #     assert "created_by_role" in schedule_data
-    #     assert "updated_at" in schedule_data
-    #     assert "updated_by" in schedule_data
-    #     assert "updated_by_role" in schedule_data
+        # 審計欄位
+        assert "created_at" in schedule_data
+        assert "created_by" in schedule_data
+        assert "created_by_role" in schedule_data
+        assert "updated_at" in schedule_data
+        assert "updated_by" in schedule_data
+        assert "updated_by_role" in schedule_data
 
-    #     # 系統欄位（軟刪除）
-    #     assert "deleted_at" in schedule_data
-    #     assert "deleted_by" in schedule_data
-    #     assert "deleted_by_role" in schedule_data
+        # 系統欄位（軟刪除）
+        assert "deleted_at" in schedule_data
+        assert "deleted_by" in schedule_data
+        assert "deleted_by_role" in schedule_data
 
-    # @pytest.mark.parametrize(
-    #     "query_params,expected_count",
-    #     [
-    #         # 測試 giver_id 篩選
-    #         ("giver_id=1", 1),  # 找到 1 筆資料
-    #         ("giver_id=2", 0),  # 找不到資料
-    #         # 測試 taker_id 篩選
-    #         ("taker_id=1", 0),  # 找不到資料（夾具沒有設定 taker_id）
-    #         ("taker_id=2", 0),  # 找不到資料
-    #         # 測試 status 篩選
-    #         ("status_filter=DRAFT", 1),  # 找到 1 筆資料（預設狀態）
-    #         ("status_filter=AVAILABLE", 0),  # 找不到資料
-    #         ("status_filter=PENDING", 0),  # 找不到資料
-    #         # 測試組合篩選
-    #         ("giver_id=1&status_filter=DRAFT", 1),  # 找到 1 筆資料
-    #         ("giver_id=1&status_filter=AVAILABLE", 0),  # 找不到資料
-    #         ("giver_id=2&status_filter=DRAFT", 0),  # 找不到資料
-    #     ],
-    # )
-    # def test_list_schedules_with_filters(
-    #     self, client, schedule_in_db, query_params, expected_count
-    # ):
-    #     """測試查詢時段列表 - 使用篩選條件（200）。"""
-    #     # GIVEN：資料已經在資料庫中（通過夾具）
+    @pytest.mark.parametrize(
+        "query_params,expected_count",
+        [
+            # 測試 giver_id 篩選
+            ("giver_id=1", 1),  # 找到 1 筆資料
+            ("giver_id=2", 0),  # 找不到資料
+            # 測試 taker_id 篩選
+            ("taker_id=1", 0),  # 找不到資料（夾具沒有設定 taker_id）
+            ("taker_id=2", 0),  # 找不到資料
+            # 測試 status 篩選
+            ("status_filter=DRAFT", 1),  # 找到 1 筆資料（預設狀態）
+            ("status_filter=AVAILABLE", 0),  # 找不到資料
+            ("status_filter=PENDING", 0),  # 找不到資料
+            # 測試組合篩選
+            ("giver_id=1&status_filter=DRAFT", 1),  # 找到 1 筆資料
+            ("giver_id=1&status_filter=AVAILABLE", 0),  # 找不到資料
+            ("giver_id=2&status_filter=DRAFT", 0),  # 找不到資料
+        ],
+    )
+    def test_list_schedules_with_filters(
+        self, client, schedule_in_db, query_params, expected_count
+    ):
+        """測試查詢時段列表 - 使用篩選條件（200）。"""
+        # GIVEN：資料已經在資料庫中（通過夾具）
 
-    #     # WHEN：使用篩選條件查詢時段列表
-    #     response = client.get(f"/api/v1/schedules?{query_params}")
+        # WHEN：使用篩選條件查詢時段列表
+        response = client.get(f"/api/v1/schedules?{query_params}")
 
-    #     # THEN：確認查詢成功
-    #     assert response.status_code == status.HTTP_200_OK
-    #     data = response.json()
-    #     assert isinstance(data, list)
-    #     assert len(data) == expected_count
+        # THEN：確認查詢成功
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == expected_count
 
-    # @pytest.mark.parametrize(
-    #     "invalid_query_params",
-    #     [
-    #         # 測試無效的 giver_id
-    #         "giver_id=0",  # giver_id 必須大於 0
-    #         "giver_id=-1",  # giver_id 不能為負數
-    #         # 測試無效的 taker_id
-    #         "taker_id=0.5",  # taker_id 不能為小數
-    #         "taker_id=0",  # taker_id 必須大於 0
-    #         # 測試無效的 status
-    #         "status_filter=NONE_EXIST",  # 不存在的狀態
-    #         "status_filter=INVALID",  # 無效的狀態值
-    #         "status_filter=123",  # 非字串狀態值
-    #         # 測試無效的組合
-    #         "giver_id=0&status_filter=DRAFT",  # 無效 giver_id + 有效 status
-    #         "giver_id=1&status_filter=INVALID",  # 有效 giver_id + 無效 status
-    #     ],
-    # )
-    # def test_list_schedules_invalid_filters(self, client, invalid_query_params):
-    #     """測試查詢時段列表 - 無效篩選條件（422）。"""
-    #     # GIVEN：無效的查詢參數
+    @pytest.mark.parametrize(
+        "invalid_query_params",
+        [
+            # 測試無效的 giver_id
+            "giver_id=0",  # giver_id 必須大於 0
+            "giver_id=-1",  # giver_id 不能為負數
+            # 測試無效的 taker_id
+            "taker_id=0.5",  # taker_id 不能為小數
+            "taker_id=0",  # taker_id 必須大於 0
+            # 測試無效的 status
+            "status_filter=NONE_EXIST",  # 不存在的狀態
+            "status_filter=INVALID",  # 無效的狀態值
+            "status_filter=123",  # 非字串狀態值
+            # 測試無效的組合
+            "giver_id=0&status_filter=DRAFT",  # 無效 giver_id + 有效 status
+            "giver_id=1&status_filter=INVALID",  # 有效 giver_id + 無效 status
+        ],
+    )
+    def test_list_schedules_invalid_filters(self, client, invalid_query_params):
+        """測試查詢時段列表 - 無效篩選條件（422）。"""
+        # GIVEN：無效的查詢參數
 
-    #     # WHEN：使用無效的篩選條件查詢
-    #     response = client.get(f"/api/v1/schedules?{invalid_query_params}")
+        # WHEN：使用無效的篩選條件查詢
+        response = client.get(f"/api/v1/schedules?{invalid_query_params}")
 
-    #     # THEN：確認返回驗證錯誤
-    #     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    #     data = response.json()
-    #     assert "detail" in data
+        # THEN：確認返回驗證錯誤
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        data = response.json()
+        assert "detail" in data
 
-    #     # 驗證 422 錯誤的完整格式
-    #     detail = data["detail"]
-    #     assert isinstance(detail, list)
-    #     assert len(detail) > 0
+        # 驗證 422 錯誤的完整格式
+        detail = data["detail"]
+        assert isinstance(detail, list)
+        assert len(detail) > 0
 
-    #     # 驗證錯誤詳情的結構
-    #     error_detail = detail[0]
-    #     assert "type" in error_detail
-    #     assert "loc" in error_detail
-    #     assert "msg" in error_detail
-    #     assert "input" in error_detail
+        # 驗證錯誤詳情的結構
+        error_detail = detail[0]
+        assert "type" in error_detail
+        assert "loc" in error_detail
+        assert "msg" in error_detail
+        assert "input" in error_detail
 
     # # ===== 取得單一時段 =====
     # def test_get_schedule_success(self, client, schedule_in_db):
