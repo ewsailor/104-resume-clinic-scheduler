@@ -3,9 +3,8 @@
 提供時段相關的業務邏輯處理，包括時段重疊檢查、時段管理等。
 """
 
-from datetime import date, time
-
 # ===== 標準函式庫 =====
+from datetime import date, time
 import logging
 from typing import Any
 

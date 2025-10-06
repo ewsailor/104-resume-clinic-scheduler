@@ -171,7 +171,7 @@
 │   │   └── utils/                 # 工具測試
 │   └── conftest.py                # 測試配置
 ├── .coveragerc                    # 測試覆蓋率配置
-├── .env                           # 環境變數（本地開發）
+├── .env                           # 環境變數（被 .gitignore 忽略）
 ├── .env.example                   # 環境變數範本
 ├── .flake8                        # flake8 配置
 ├── .gitignore                     # Git 忽略檔案
@@ -339,7 +339,7 @@
 │   │   └── utils/                 # 工具測試
 │   └── conftest.py                # 測試配置
 ├── .coveragerc                    # 測試覆蓋率配置
-├── .env                           # 環境變數（本地開發）
+├── .env                           # 環境變數（被 .gitignore 忽略）
 ├── .env.example                   # 環境變數範本
 ├── .flake8                        # flake8 配置
 ├── .gitignore                     # Git 忽略檔案

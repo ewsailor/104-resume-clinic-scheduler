@@ -1,4 +1,7 @@
-"""模型輔助工具測試。"""
+"""模型輔助工具測試。
+
+測試模型輔助工具的功能。
+"""
 
 # ===== 標準函式庫 =====
 from datetime import date, datetime, time

@@ -1,4 +1,7 @@
-"""時區處理工具測試（使用 freezegun）。"""
+"""時區處理工具測試
+
+使用 freezegun 模擬時間進行測試。
+"""
 
 # ===== 標準函式庫 =====
 from datetime import datetime

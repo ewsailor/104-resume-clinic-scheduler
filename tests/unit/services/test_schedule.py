@@ -1,4 +1,7 @@
-"""時段服務層測試。"""
+"""時段服務層測試。.
+
+測試時段管理業務邏輯處理。
+"""
 
 # ===== 標準函式庫 =====
 from datetime import date, datetime, time
