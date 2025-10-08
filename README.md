@@ -1,11 +1,11 @@
 # 104 履歷診療室 - 平台內諮詢時間媒合系統
 
 [![Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/ewsailor/104-resume-clinic-scheduler)
-[![Python](https://img.shields.io/badge/Python-3.12.8-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.116+-green.svg)](https://fastapi.tiangolo.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%2FMariaDB-blue.svg)](https://www.mysql.com/)
 [![Alembic](https://img.shields.io/badge/Alembic-Database%20Migration-blue.svg)](https://alembic.sqlalchemy.org/)
-[![Poetry](https://img.shields.io/badge/Poetry-2.1.3-green.svg)](https://python-poetry.org/)
+[![Poetry](https://img.shields.io/badge/Poetry-1.2+-blue.svg)](https://python-poetry.org/)
 [![CI/CD](https://github.com/ewsailor/104-resume-clinic-scheduler/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ewsailor/104-resume-clinic-scheduler/actions/workflows/ci.yml)
 [![Test Coverage](https://img.shields.io/badge/Coverage-80%25+-brightgreen.svg)](https://github.com/ewsailor/104-resume-clinic-scheduler)
 
@@ -17,13 +17,15 @@
   - [使用者流程圖](#使用者流程圖)
 - [架構設計](#架構設計)
   - [技術棧與選型理由](#技術棧與選型理由)
-  - [安全性](#安全性)
-  - [可維護性與可擴充性](#可維護性與可擴充性)
-  - [可靠性](#可靠性)
-  - [效能](#效能)
-  - [開發效率](#開發效率)
+  - [安全性：6 項優化](#安全性)
+  - [開發效率：10 項優化](#開發效率)
     - [速懂新技術與選型理由 AI Prompt 模板](#tech-quickstart-insight)
-    - [實作功能 AI Prompt 模板](#feature-implementation)
+    - [加速實作功能與文件生成 AI Prompt 模板](#accelerate-feature-docs-template)
+    - [IDE AI 工具：Cursor](#ide)
+    - [非 IDE 的 AI 工具：GitHub Copilot、Claude Code、ChatGPT、Gemini](#not-ide)
+  - [效能（解決高流量、高併發）：8 項優化](#效能)
+  - [可維護性與可擴充性：19 項優化](#可維護性與可擴充性)
+  - [可靠度：11 項優化](#可靠度)
 - [快速開始](#快速開始)
   - [環境需求](#環境需求)
   - [安裝步驟](#安裝步驟)
@@ -47,14 +49,14 @@
     - [pre-commit](#pre-commit)
     - [CI/CD](#cicd)
 - [未來規劃](#未來規劃)
-  - JWT 登入功能、Redis、WebSocket 通知功能、MongoDB、Docker、端對端測試、AWS 部署
+  - JWT 登入功能、Redis、WebSocket 通知功能、MongoDB、Docker、端對端測試、AWS 部署、CD
 - [開發者](#開發者)
 
 ## <a name="專案概述"></a>專案概述 [返回目錄 ↑](#目錄)
 
 ### <a name="使用者故事與核心功能"></a>使用者故事與核心功能 [返回目錄 ↑](#目錄)
 
-讓 Giver（診療服務提供者）與 Taker（診療服務接受者）能在平台內，方便地設定可面談時段並完成配對媒合，同時提供即時通知，以減少等待回應時的不確定與焦慮感。
+讓 Giver（診療服務提供者）與 Taker（診療服務接受者）在平台內，方便地設定可面談時段並完成配對媒合，同時提供即時通知，以減少等待回應時的不確定與焦慮感。
 
 完整使用者故事請[點此](./docs/user-stories.md)查看，以下簡述本專案的主要使用者故事：
 
@@ -80,12 +82,12 @@
 
 ### <a name="使用者介面截圖"></a>使用者介面截圖 [返回目錄 ↑](#目錄)
 
-- Giver 列表
+- **Giver 列表總覽**：
   - ![Giver 列表總覽](./static/images/ui/01-giver-list-overview.png)
-- Taker 預約 Giver 時段
+- **Taker 預約 Giver 時段**：
   - ![Taker 預約 Giver 時段](./static/images/ui/02-taker-scheduling-giver-time.png)
   - ![Taker 預約 Giver 時段結果](./static/images/ui/03-taker-scheduling-giver-time-result.png)
-- Taker 提供方便時段給 Giver
+- **Taker 提供方便時段給 Giver**：
   - ![Taker 提供方便時段給 Giver](./static/images/ui/04-taker-provide-available-time.png)
   - ![Taker 提供方便時段給 Giver 結果](./static/images/ui/05-taker-provide-available-time-result.png)
 
@@ -111,22 +113,26 @@
 
 ### <a name="技術棧與選型理由"></a>技術棧與選型理由 [返回目錄 ↑](#目錄)
 
-- 簡介：本專案簡介主要使用技術為 Python、FastAPI 框架 + SQLAlchemy、MySQL/MariaDB 資料庫 + Alembic，採分層架構設計避免高耦合，以 RESTful 原則設計時段（Schedule）的 CRUD API，並可於 Swagger/ReDoc 查看 API 請求與回應範例。開發時使用 pytest、pre-commit、CI/CD 的 CI 確保程式碼品質，測試覆蓋率在 80% 以上，可用 Postman Collection Runner 一鍵測試所有 API，並有考量安全性、可維護性與可擴充性、可靠性、效能、開發效率。
-- 完整使用技術棧與選型理由如下：
+- **簡介**：
+  - **技術棧選型理由**：安全性、開發效率、效能（解決高流量、高併發）、可維護性與可擴充性、可靠度。
+  - **後端**：Python、FastAPI 框架 + SQLAlchemy ORM、MySQL/MariaDB 資料庫 + Alembic。
+  - **API**：採分層架構設計避免高耦合，Pydantic schema 資料驗證，用 decorator 處理錯誤與例外、紀錄日誌，以 RESTful 原則設計時段（Schedule）的 CRUD API，可於 Swagger/ReDoc 查看 API 請求與回應範例，用 Postman Collection Runner 一鍵測試所有 API。
+  - **測試**：pre-commit、Pytest 單元測試與整合測試、CI/CD 的 CI，測試覆蓋率在 80% 以上，有使用夾具管理測試資料、GIVEN-WHEN-THEN 寫測試案例、參數化測試裝飾器等。
+- **完整使用技術棧與選型理由如下**：
 
 | 分類       | 技術棧與選型理由                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 後端       | - **核心架構**：Python 同時適合 Web 開發與資料分析、FastAPI 框架（Uvicorn ASGI 非同步/熱重載伺服器、Pydantic 資料驗證與型別提示、自動生成 API 文件）、依賴注入、Jinja2 伺服器端渲染模板引擎<br>- **相關優化**：錯誤處理與日誌 decorator、健康檢查監控應用程式是否存活與就緒、CORS 僅允許授權網域問                                                                                                                    |
-| 資料庫     | - **核心架構**：MySQL/MariaDB 處理結構化資料如時段預約、SQLAlchemy ORM 以 Python 物件而非手寫 SQL 操作資料庫、SQLite 測試環境資料庫、Alembic 資料庫 Migration、ERD 實體關聯圖 <br>- **相關優化**：最小權限原則確保安全性、Rollback 落實事務管理避免資料不一致、軟刪除避免誤刪資料、Eager loading 解決 N+1、Lazy loading 需要時才載入子表、索引提升效能、連線池確保高併發穩定、外鍵約束避免孤兒紀錄、Enum 降低維護成本 |
+| 資料庫     | - **核心架構**：MySQL/MariaDB 處理結構化資料如時段預約、SQLAlchemy ORM 以 Python 物件而非手寫 SQL 操作資料庫、SQLite 測試環境資料庫、Alembic 資料庫 Migration、ERD 實體關聯圖 <br>- **相關優化**：最小權限原則確保安全性、Rollback 落實事務管理避免資料不一致、Eager loading 解決 N+1、Lazy loading 需要時才載入子表、索引提升效能、連線池確保高併發穩定、外鍵約束避免孤兒紀錄、軟刪除避免誤刪資料、Enum 降低維護成本 |
 | API        | 分層架構避免高耦合、RESTful  原則設計時段（Schedule）的  CRUD API、Swagger/ReDoc 查看 API 請求與回應範例、Postman Collection Runner 一鍵測試所有 API                                                                                                                                                                                                                                                                  |
 | 測試       | Pytest 框架、測試覆蓋率 80%+、夾具 Fixtures 管理測試資料、Given-When-Then 註解格式、參數化測試裝飾器避免重複程式碼、單元測試確保程式碼按照預期運作、整合測試確保多個組件能正確協同運作                                                                                                                                                                                                                                |
 | 自動化測試 | pre-commit 官方推薦的 Git 提交前檢查工具、CI/CD 提交程式碼後自動執行 pre-commit、pytest 測試                                                                                                                                                                                                                                                                                                                          |
 | 環境       | .env 管理環境變數、.gitignore 避免敏感資訊外洩、Poetry 依賴管理確保環境一致性、Pydantic BaseSettings 配置管理、SecretStr 敏感資料保護                                                                                                                                                                                                                                                                                 |
 | 前端       | HTML5 語義化結構、CSS3 Flexbox 彈性布局系統、JavaScript ES6+ let 與 const 取代 var 避免變數汙染、Bootstrap 響應式網格、Font Awesome 支援 React, Vue, Angular, Bootstrap 框架的 Icons、靜態資源預載入加速頁面渲染、分頁機制加速頁面渲染                                                                                                                                                                                |
-| 開發工具   | Cursor AI 輔助開發、Jira 專案管理、Postman API 測試視覺化、MySQL Workbench 資料庫視覺化、Sourcetree Git 視覺化                                                                                                                                                                                                                                                                                                        |
-| 選型理由   | 安全性、可維護性與可擴充性、可靠性、效能、開發效率                                                                                                                                                                                                                                                                                                                                                                    |
+| 開發工具   | 速懂新技術與選型理由 AI Prompt 模板、加速實作功能與文件生成 AI Prompt 模板、加速開發 AI 工具（Cursor、GitHub Copilot、Claude Code、ChatGPT、Gemini）、Jira 專案管理、Postman API 測試視覺化、MySQL Workbench 資料庫視覺化、Sourcetree Git 視覺化                                                                                                                                                                      |
+| 選型理由   | 安全性、開發效率、效能（解決高流量、高併發）、可維護性與可擴充性、可靠度                                                                                                                                                                                                                                                                                                                                              |
 
-### <a name="安全性"></a>安全性 [返回目錄 ↑](#目錄)
+### <a name="安全性"></a>安全性：6 項優化 [返回目錄 ↑](#目錄)
 
 - **.env 管理環境變數**：.env 檔案被 .gitignore 忽略，避免敏感資訊被提交到公開的 GitHub
 - **Pydantic BaseSettings 配置管理**：配置參數從 .env 讀取避免敏感資訊洩露，且讀取時會驗證每個值的型別，降低錯誤配置風險
@@ -135,7 +141,50 @@
 - **CORS 跨域請求控管**：只允許經授權的網域訪問後端 API，避免惡意網站存取後端 API
 - **最小權限原則**：避免使用 root 進行資料庫操作，而是建立使用者，並只授予其在資料庫上所有資料表必要的權限
 
-### <a name="可維護性與可擴充性"></a>可維護性與可擴充性 [返回目錄 ↑](#目錄)
+### <a name="開發效率"></a>開發效率：10 項優化 [返回目錄 ↑](#目錄)
+
+- **AI 加速開發**：
+  - **想瞭解新技術與選型理由時**：
+    1. [點此](./docs/tech-quickstart-insight.md)前往<a name="tech-quickstart-insight"></a>速懂新技術與選型理由 AI Prompt 模板
+    2. 在模板中【新名詞】處，填寫想瞭解的【新名詞】
+    3. 更新【專案情境】
+    4. 將模板中所有 Prompt 內容，複製貼上到 AI 工具的聊天對話框中，即可速懂新技術與選型理由
+  - **想實作功能並省下製作文件時間時**：
+    1. [點此](./docs/accelerate-feature-docs-template.md)前往<a name="accelerate-feature-docs-template"></a>加速實作功能與文件生成 AI Prompt 模板
+    2. 在模板中【實作功能】處，填寫欲【實作的功能】
+    3. 更新【專案情境】
+    4. 將模板中所有 Prompt 內容，複製貼上到 AI 工具的聊天對話框中，即可加速實作出功能，並生成適合放在 Jira 上的文件內容
+  - **想加速功能開發時**：
+    - **IDE AI 工具<a name="ide"></a>**：如 Cursor，一套以 VSCode 為基礎改良的 IDE（整合開發環境，Integrated Development Environment）開發工具，可在 Cursor 對話框下 Prompt 就重構程式碼、排除語法錯誤和潛在邏輯問題、快速重新命名變數提取函式、降低拼寫錯誤造成的 bug 等
+    - **非 IDE 的 AI 工具<a name="not-ide"></a>**：
+      - **GitHub Copilot**：根據上下文在 IDE 內，即時生成或補齊程式碼
+      - **Claude Code、ChatGPT、Gemini 等 LLM 大型語言模型**：用自然語言詢問 AI 生成程式碼後，貼回 IDE 使用
+- **Uvicorn 熱重載**：Uvicorn 啟動時加上 --reload 參數，修改後自動重新啟動伺服器，立即看到修改效果
+- **實體關聯圖（Entity-Relationship Diagram, ERD）**：視覺化呈現資料庫中各資料表的關聯，減少因資料庫設計問題而產生的反覆修改和重工，使用 dbdiagram.io 製作
+- **Jira 專案管理**：有助開發團隊管理任務、掌握分工與優先順序、追蹤進度
+  - git commit 時加上 Jira issue title，能在 Jira 任務中看到所有相關的 commit，如下圖所示
+  - ![Jira 專案管理](static/images/tools/jira/jira-issue-detail.png)
+- **Postman API 測試視覺化**：提供 API 測試視覺化介面，有助開發團隊快速測試與驗證 API，且可用 Collection Runner 一鍵運行集合中所有自動測試腳本，即時查看所有 API 的測試結果
+  - 路徑：docs\postman\104 Resume Clinic Scheduler.postman_collection.json
+  - ![即時查看所有 API 的測試結果](static/images/tools/postman/03-run-postman-results.png)
+- **MySQL Workbench 資料庫視覺化**：提供資料庫視覺化介面，有助開發團隊掌握資料表結構、查看資料庫中儲存的資料的值
+  - ![MySQL Workbench 資料庫設計](static/images/tools/mysql-workbench/table-structure.png)
+  - ![MySQL Workbench 查詢結果](static/images/tools/mysql-workbench/query-results.png)
+- **Sourcetree Git 視覺化**：提供 Git 視覺化介面，有助開發團隊更輕鬆地進行程式碼合併、分支管理、衝突解決
+  - ![Sourcetree Git 管理](static/images/tools/sourcetree/sourcetree.png)
+
+### <a name="效能"></a>效能（解決高流量、高併發）：8 項優化 [返回目錄 ↑](#目錄)
+
+- **Uvicorn ASGI 伺服器**：FastAPI 官方推薦的 ASGI 非同步伺服器，利用 async/await 提升吞吐量，支援高併發 API 請求、支援熱重載功能
+- **Jinja2 模板引擎**：Python 官方推薦的模板引擎，在伺服器端，將資料動態渲染到 HTML 模板並回傳給用戶，使用模板繼承保持 HTML 結構一致、對變數自動轉義防止 XSS 攻擊、支援快取已編譯的模板提高效能
+- **Eager loading 解決 N+1**：JOIN 查詢時載入所需關聯資料，避免多次查詢的 N+1 問題，適用高頻率查詢場景如查詢時段列表、Giver 資訊、Taker 資訊
+- **Lazy loading**：需要時才載入子表，避免不必要資料抓取，適用低頻率查詢場景如審計欄位
+- **資料庫索引**：為高頻率查詢場景建立索引避免全表掃描、低頻率查詢場景不建立索引避免系統負擔、選擇性高欄位放複合索引前面提高效率、覆蓋索引盡可能涵蓋查詢所需欄位
+- **分頁**：使用分頁避免大量資料載入，提高頁面渲染速度
+- **Bootstrap 響應式網格**：網站依不同裝置（手機、平板、桌面）自動調整版面，減少因不同裝置重新渲染導致頁面載入變慢
+- **靜態資源預載入**：透過 HTML preload、prefetch，在瀏覽器解析 HTML 時即開始下載關鍵資源，避免資源使用時才開始下載造成阻塞，提高頁面渲染速度
+
+### <a name="可維護性與可擴充性"></a>可維護性與可擴充性：19 項優化 [返回目錄 ↑](#目錄)
 
 - **FastAPI 自動生成文件**：FastAPI 官方內建，自動依據路由和 Pydantic 型別生成 OpenAPI 規範文檔，提供互動式測試的 Swagger UI、單頁式閱讀介面的 Redoc，減少維護 API 文件的工作量
 - **依賴注入**：將依賴（資料庫連線、權限驗證、設定檔讀取等邏輯）封裝在一個獨立函式中，需要時透過 Depends() 注入，需升級某功能時只需修改注入的依賴
@@ -157,7 +206,7 @@
 - **HTML5 語義化標籤**：標籤本身就帶有語意如 `<nav>` 代表導覽區塊，而不是只用 `<div>` 或 `<span>` 排版
 - **CSS :root 管理變數**：所有子元素都可透過 var(--variable-name) 存取 :root 變數，統一管理顏色、字體大小、間距等所有元素
 
-### <a name="可靠性"></a>可靠性 [返回目錄 ↑](#目錄)
+### <a name="可靠度"></a>可靠度：11 項優化 [返回目錄 ↑](#目錄)
 
 - **FastAPI 型別檢查**：自動檢查傳入資料的型別，確保符合 Pydantic 模型定義，避免非法資料導致系統錯誤或崩潰
 - **Pydantic 輸入驗證**：FastAPI 官方推薦，輸入資料不符合 schema 設定的型別和格式會報錯，確保資料正確性，避免系統崩潰
@@ -170,51 +219,6 @@
 - **外鍵約束避免孤兒紀錄**：確保子表的外鍵都有對應到父表中存在的主鍵，避免因父表刪除產生孤兒紀錄
 - **SQLite 測試環境**：不需啟動完整資料庫伺服器即可運行，確保測試失敗代表程式碼問題，而不是環境問題
 - **safe_getattr**：自定義此函式，主要用於 ORM 關聯屬性，相比 getattr，能捕獲所有異常並返回預設值，避免沒被捕捉的異常導致 API 失敗。
-
-### <a name="效能"></a>效能 [返回目錄 ↑](#目錄)
-
-- **Uvicorn ASGI 伺服器**：FastAPI 官方推薦的 ASGI 非同步伺服器，利用 async/await 提升吞吐量，支援高併發 API 請求、支援熱重載功能
-- **Jinja2 模板引擎**：Python 官方推薦的模板引擎，在伺服器端，將資料動態渲染到 HTML 模板並回傳給用戶，使用模板繼承保持 HTML 結構一致、對變數自動轉義防止 XSS 攻擊、支援快取已編譯的模板提高效能
-- **Eager loading 解決 N+1**：JOIN 查詢時載入所需關聯資料，避免多次查詢的 N+1 問題，適用高頻率查詢場景如查詢時段列表、Giver 資訊、Taker 資訊
-- **Lazy loading**：需要時才載入子表，避免不必要資料抓取，適用低頻率查詢場景如審計欄位
-- **資料庫索引**：為高頻率查詢場景建立索引避免全表掃描、低頻率查詢場景不建立索引避免系統負擔、選擇性高欄位放複合索引前面提高效率、覆蓋索引盡可能涵蓋查詢所需欄位
-- **分頁**：使用分頁避免大量資料載入，提高頁面渲染速度
-- **Bootstrap 響應式網格**：網站依不同裝置（手機、平板、桌面）自動調整版面，減少因不同裝置重新渲染導致頁面載入變慢
-- **靜態資源預載入**：透過 HTML preload、prefetch，在瀏覽器解析 HTML 時即開始下載關鍵資源，避免資源使用時才開始下載造成阻塞，提高頁面渲染速度
-
-### <a name="開發效率"></a>開發效率 [返回目錄 ↑](#目錄)
-
-- **Cursor AI 輔助開發**：能根據上下文即時生成或補全程式碼、排除語法錯誤和潛在邏輯問題、快速重新命名變數提取函式、降低拼寫錯誤造成的 bug 等
-- **Uvicorn 熱重載**：Uvicorn 啟動時加上 --reload 參數，修改後自動重新啟動伺服器，立即看到修改效果
-- **實體關聯圖（Entity-Relationship Diagram, ERD）**：視覺化呈現資料庫中各資料表的關聯，減少因資料庫設計問題而產生的反覆修改和重工
-- **Jira 專案管理**：有助開發團隊管理任務、掌握分工與優先順序、追蹤進度
-  - ![Jira 專案管理](static/images/tools/jira/jira-issue-detail.png)
-- **Postman API 測試視覺化**：提供 API 測試視覺化介面，有助開發團隊快速測試與驗證 API，且可用 Collection Runner 一鍵運行集合中所有自動測試腳本，即時查看所有 API 的測試結果
-  - 路徑：docs\postman\104 Resume Clinic Scheduler.postman_collection.json
-  - ![即時查看所有 API 的測試結果](static/images/tools/postman/03-run-postman-results.png)
-- **MySQL Workbench 資料庫視覺化**：提供資料庫視覺化介面，有助開發團隊掌握資料表結構、查看資料庫中儲存的資料的值
-  - ![MySQL Workbench 資料庫設計](static/images/tools/mysql-workbench/table-structure.png)
-  - ![MySQL Workbench 查詢結果](static/images/tools/mysql-workbench/query-results.png)
-- **Sourcetree Git 視覺化**：提供 Git 視覺化介面，有助開發團隊更輕鬆地進行程式碼合併、分支管理、衝突解決
-  - ![Sourcetree Git 管理](static/images/tools/sourcetree/sourcetree.png)
-
-#### <a name="tech-quickstart-insight"></a>速懂新技術與選型理由 AI Prompt 模板 [返回目錄 ↑](#目錄)
-
-使用方法說明：
-
-1. [點此](./docs/tech-quickstart-insight.md)前往速懂新技術與選型理由 AI Prompt 模板
-2. 在模板中【新名詞】處，填寫想瞭解的【新名詞】
-3. 更新【專案情境】
-4. 將模板中所有 Prompt 內容，複製貼上到 AI 工具的聊天對話框中，即可速懂新技術與選型理由
-
-#### <a name="feature-implementation"></a>實作功能 AI Prompt 模板 [返回目錄 ↑](#目錄)
-
-使用方法說明：
-
-1. [點此](./docs/feature-implementation.md)前往實作功能 AI Prompt 模板
-2. 在模板中【實作功能】處，填寫欲【實作的功能】
-3. 更新【專案情境】
-4. 將模板中所有 Prompt 內容，複製貼上到 AI 工具的聊天對話框中，即可加速實作出功能
 
 ## <a name="快速開始"></a>快速開始 [返回目錄 ↑](#目錄)
 
@@ -476,7 +480,7 @@
   - **第一正規化（1NF）**：欄位必須是原子值，不能一個欄位有多個值
   - **第二正規化（2NF）**：在 1NF 基礎上，非鍵欄位必須完全依賴主鍵，不能「部分依賴」（某欄位只依賴複合主鍵的一部分，而非全部）
   - **第三正規化（3NF）**：在 2NF 基礎上，非鍵欄位只能依賴主鍵，不能「傳遞依賴」（透過其他非鍵欄位，間接依賴主鍵）
-- **實體關聯圖（Entity-Relationship Diagram, ERD）**：視覺化呈現資料庫中各資料表的關聯，減少因資料庫設計問題而產生的反覆修改和重工
+- **實體關聯圖（Entity-Relationship Diagram, ERD）**：視覺化呈現資料庫中各資料表的關聯，減少因資料庫設計問題而產生的反覆修改和重工，使用 dbdiagram.io 製作
   - ![ERD 實體關聯圖](static/images/database/erd.svg)
 
 ### <a name="api"></a>API [返回目錄 ↑](#目錄)
@@ -676,7 +680,7 @@ Postman 提供視覺化介面，有助開發團隊快速測試與驗證 API，�
 
 #### <a name="參數化測試裝飾器"></a>參數化測試裝飾器 [返回目錄 ↑](#目錄)
 
--**說明**：使用 `@pytest.mark.parametrize` 裝飾器，用同一段測試程式碼，測試不同輸入參數，避免撰寫大量重複且結構相似的測試案例
+- **說明**：使用 `@pytest.mark.parametrize` 裝飾器，用同一段測試程式碼，測試不同輸入參數，避免撰寫大量重複且結構相似的測試案例
 
 - **參數名稱字串**：可有多個參數名稱，並用逗號隔開
 - **參數值清單**：每個參數名稱實際傳入的值，包含所有測試案例的資料
@@ -826,18 +830,21 @@ Postman 提供視覺化介面，有助開發團隊快速測試與驗證 API，�
     - 執行整合測試：pytest tests/integration/
     - 報告測試結果：測試覆蓋率
   - **CD（Continuous Delivery / Deployment）**
-    - 若 CI 綠燈 → 自動部署到 staging / production
-    - 可能包括 Docker build & push, k8s apply, AWS/GCP 部署等
+    - Continuous Delivery 持續交付：CI 通過後，自動部署到預備環境 (staging)，由人工決定是否要部署到正式環境，以保持產品隨時處於可發布的狀態，又可在直接發布前再次審核避免風險
+    - Continuous Deployment 持續部署：在持續交付的基礎上，自動部署到正式環境 (production)，以讓使用者能迅速體驗到最新功能
 
 ## <a name="未來規劃"></a>未來規劃 [返回目錄 ↑](#目錄)
 
 - **JWT 登入功能**: 無狀態 stateless 的使用者認證方式、伺服器不用維護 session 不會有會話共享問題，有助水平擴展，適合前後端分離與雲端環境
-- **Redis**: 快取與 session 管理工具，減少 MySQL 查詢壓力，並確保即時通知在高併發場景下的效能表現
+- **Redis**: 快取（Caching）與 session 管理工具，減少 MySQL 查詢壓力，並確保即時通知在高併發場景下的效能表現
 - **WebSocket 通知功能**: 讓使用者能即時看到資料變動、收到即時訊息通知、預計回覆時間通知、自動提醒功能（逾期回覆提醒），減少等待回應時的不確定與焦慮感
 - **MongoDB**: NoSQL 資料庫，適合儲存非結構化資料（如使用者行為紀錄、聊天室訊息），掌握用戶偏好以改善產品體驗
-- **Docker**：將應用程式及其所有依賴打包成容器，確保開發環境一致性，解決『我的電腦上可以跑，你的電腦上卻不行』的問題，提升開發效率、加速部署
+- **Docker**：將應用程式及其所有依賴打包成容器，確保環境一致性，解決『我的電腦上可以跑，你的電腦上卻不行』的問題，提升開發效率、加速部署
 - **端到端測試**：測試從前端用戶操作，到後端系統、資料庫、外部 API 回應的完整流程
 - **AWS**: 支援自動化部署與擴展，減少本地端伺服器維護成本。如使用 EC2 或 ECS 部署 FastAPI 伺服器、RDS 提供 MySQL 資料庫、CloudWatch 監控日誌與 CPU/記憶體使用率、S3 儲存靜態資源等
+- **CD（Continuous Delivery / Deployment）**
+  - Continuous Delivery 持續交付：CI 通過後，自動部署到預備環境 (staging)，由人工決定是否要部署到正式環境，以保持產品隨時處於可發布的狀態，又可在直接發布前再次審核避免風險
+  - Continuous Deployment 持續部署：在持續交付的基礎上，自動部署到正式環境 (production)，以讓使用者能迅速體驗到最新功能
 
 ## <a name="開發者"></a>開發者 [返回目錄 ↑](#目錄)
 

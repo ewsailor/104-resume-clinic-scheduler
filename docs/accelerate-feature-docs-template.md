@@ -1,12 +1,12 @@
-# 實作功能 AI Prompt 模板
+# 加速實作功能與文件生成 AI Prompt 模板
 
-[← 返回根目錄 README.md](../README.md#feature-implementation)
+[← 返回根目錄 README.md](../README.md#accelerate-feature-docs-template)
 
 使用方法說明：
 
 1. 在下方【實作功能】處，填寫欲【實作的功能】
 2. 更新【專案情境】
-3. 將以下所有 Prompt 內容，複製貼上到 AI 工具的聊天對話框中，即可加速實作出功能
+3. 將以下所有 Prompt 內容，複製貼上到 AI 工具的聊天對話框中，即可加速實作出功能，並生成適合放在 Jira 上的文件內容
 
 =====請複製此線以下所有 Prompt 內容=====
 
