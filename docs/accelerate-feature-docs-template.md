@@ -252,104 +252,18 @@
 
 ```
 104-resume-clinic-scheduler/
-├── .github/workflows/ci.yml       # CI/CD
-├── alembic/                       # 資料庫遷移管理配置
-├── app/                           # 應用程式主目錄
-│   ├── core/                      # 設定管理
-│   │   ├── giver_data.py          # 模擬 Giver 資料，用於伺服器端渲染
-│   │   └── settings.py            # 應用程式設定
-│   ├── crud/                      # CRUD 資料庫操作層
-│   │   └── schedule.py            # 時段 CRUD 操作
-│   ├── database/                  # 資料庫連線層
-│   │   ├── base.py                # 資料庫基礎設定
-│   │   └── connection.py          # 資料庫連線管理
-│   ├── decorators/                # 裝飾器
-│   │   ├── error_handlers.py      # 錯誤處理裝飾器
-│   │   └── logging.py             # 日誌裝飾器
-│   ├── enums/                     # 枚舉型別定義
-│   │   ├── models.py              # 資料庫模型枚舉
-│   │   └── operations.py          # 操作枚舉
-│   ├── errors/                    # 錯誤處理系統
-│   │   ├── error_codes/           # 錯誤代碼
-│   │   │   ├── cors.py            # CORS 錯誤代碼
-│   │   │   ├── crud.py            # CRUD 錯誤代碼
-│   │   │   ├── router.py          # 路由錯誤代碼
-│   │   │   ├── service.py         # 服務錯誤代碼
-│   │   │   └── system.py          # 系統錯誤代碼
-│   │   ├── exceptions.py          # 自定義錯誤例外
-│   │   ├── formatters.py          # 錯誤訊息格式化
-│   │   └── handlers.py            # 錯誤處理輔助函式
-│   ├── middleware/                # 中間件
-│   │   ├── cors.py                # CORS 中間件
-│   │   └── error_handler.py       # 錯誤處理中間件
-│   ├── models/                    # SQLAlchemy 資料模型
-│   │   ├── schedule.py            # 時段模型
-│   │   └── user.py                # 使用者模型
-│   ├── routers/                   # API 路由模組
-│   │   ├── api/                   # API 端點
-│   │   │   └── schedule.py        # 時段管理 API
-│   │   ├── health.py              # 健康檢查 API
-│   │   └── main.py                # 主要 API
-│   ├── schemas/                   # Pydantic 資料驗證
-│   │   └── schedule.py            # 時段資料驗證
-│   ├── services/                  # 業務邏輯層
-│   │   └── schedule.py            # 時段業務邏輯
-│   ├── templates/                 # Jinja2 HTML 模板
-│   │   ├── base.html              # 基礎模板
-│   │   └── giver_list.html        # Giver 列表模板
-│   ├── utils/                     # 工具模組
-│   │   ├── model_helpers.py       # 資料庫模型輔助工具
-│   │   └── timezone.py            # 時區處理工具
-│   ├── factory.py                 # 應用程式工廠
-│   └── main.py                    # 應用程式入口點
-├── database/                      # 資料庫相關檔案
-│   └── schema.sql                 # 資料庫結構
-├── docs/                          # 開發文檔
-│   ├── postman/                   # Postman 測試集合
-│   │   └── 104 Resume Clinic Scheduler.postman_collection.json
-│   ├── feature-implementation.md  # 實作功能 AI Prompt 模板
-│   ├── tech-quickstart-insight.md # 速懂新技術與選型理由 AI Prompt 模板
-│   └── user-stories.md            # 使用者故事
-├── htmlcov/                       # 測試覆蓋率報告
-│   ├── index.html                 # 覆蓋率報告首頁
-│   ├── class_index.html           # 類別覆蓋率
-│   ├── function_index.html        # 函式覆蓋率
-│   └── ...                        # 其他覆蓋率報告檔案
-├── logs/                          # 日誌檔案
-├── scripts/                       # 開發工具腳本
-│   ├── clear_cache.py             # 清除快取腳本
-│   └── fix_imports.py             # 修復匯入腳本
-├── static/                        # 靜態檔案
-│   ├── css/                       # 樣式檔案
-│   ├── images/                    # 圖片資源
-│   └── js/                        # JavaScript 檔案
-├── tests/                         # 測試檔案
-│   ├── fixtures/                  # 測試夾具
-│   │   ├── integration/           # 整合測試夾具
-│   │   └── unit/                  # 單元測試夾具
-│   ├── integration/               # 整合測試
-│   │   ├── health.py              # 健康檢查路由整合測試
-│   │   ├── main.py                # 主要路由整合測試
-│   │   └── schedule.py            # 時段路由整合測試
-│   ├── unit/                      # 單元測試
-│   │   ├── crud/                  # CRUD 測試
-│   │   ├── errors/                # 錯誤處理測試
-│   │   ├── models/                # 模型測試
-│   │   ├── services/              # 服務測試
-│   │   └── utils/                 # 工具測試
-│   └── conftest.py                # 測試配置
-├── .coveragerc                    # 測試覆蓋率配置
-├── .env                           # 環境變數（被 .gitignore 忽略）
-├── .env.example                   # 環境變數範本
-├── .flake8                        # flake8 配置
-├── .gitignore                     # Git 忽略檔案
-├── .pre-commit-config.yaml        # pre-commit 配置
-├── alembic.ini                    # Alembic 配置檔案
-├── poetry.lock                    # Poetry 依賴鎖定
-├── pyproject.toml                 # Poetry 專案配置
-├── pytest-integration.ini         # pytest 整合測試配置
-├── pytest.ini                     # pytest 主要配置
-└── README.md                      # 專案說明文件
+├── app/
+│   ├── main.py
+│   ├── models/            # SQLAlchemy 模型
+│   │   ├── __init__.py    # 新增此檔案，讓 Alembic 可讀取 Models
+│   │   └── base.py        # SQLAlchemy Base 模型
+│   └── database.py        # engine, session
+├── alembic/               # Alembic migrations 會自動生成
+│   ├── env.py             # Alembic 的核心設定，會在此處配置 SQLAlchemy
+│   └── versions/          # migration 版本檔案
+├── alembic.ini            # Alembic 主設定檔
+├── pyproject.toml         # 紀錄安裝的 Alembic 版本
+└── README.md
 ```
 
 ### 實作步驟
